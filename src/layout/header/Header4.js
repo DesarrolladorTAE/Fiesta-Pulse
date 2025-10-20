@@ -1,0 +1,49 @@
+import Link from "next/link";
+import { Fragment } from "react";
+import HiddenSidebar from "../HiddenSidebar";
+import Search from "../Search";
+import HeaderTop from "./HeaderTop";
+import Menu from "./Menu";
+
+const Header4 = () => {
+  return (
+    <Fragment>
+      <header className="main-header header-four">
+        <HeaderTop />
+        {/*Header-Upper*/}
+        <div className="header-upper bg-white">
+          <div className="container clearfix">
+            <div className="header-inner rel d-flex align-items-center">
+              <div className="logo-outer">
+                <div className="logo">
+                  <Link legacyBehavior href="/">
+                    <a>
+                      <img
+                        src="assets/images/logos/logo-one.png"
+                        alt="Logo"
+                        title="Logo"
+                      />
+                    </a>
+                  </Link>
+                </div>
+              </div>
+              <div className="nav-outer ms-lg-auto clearfix">
+                {/* Main Menu */}
+                <Menu />
+                {/* Main Menu End*/}
+              </div>
+              {/* Nav Search */}
+              <div className="nav-search py-10">
+                <Search />
+              </div>
+
+            </div>
+          </div>
+        </div>
+        {/*End Header Upper*/}
+      </header>
+      <HiddenSidebar />
+    </Fragment>
+  );
+};
+export default Header4;
