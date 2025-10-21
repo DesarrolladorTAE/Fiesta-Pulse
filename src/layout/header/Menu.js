@@ -42,31 +42,34 @@ const MobileMenu = () => {
             <span className="icon-bar" />
             <span className="icon-bar" />
           </Accordion.Toggle>
-          
+
         </div>
         <Accordion.Collapse
           eventKey="collapse"
           className="navbar-collapse clearfix"
         >
           <ul className="navigation clearfix">
-          <li>
-            <Link href="/">Home</Link>
-          </li>
+            <li>
+              <Link href="/">Home</Link>
+            </li>
 
-          <li><Link href="/shop">Shop</Link></li>
-          {/* <li><Link href="/product-details">Product Details</Link></li> */}
-          {/* <li><Link href="/cart">Cart</Link></li> */}
-          {/* <li><Link href="/checkout">Checkout</Link></li> */}
-          <li><Link href="/about">About us</Link></li>
-          <li><Link href="/contact">Contact us</Link></li>
-          <li><Link href="/404">404 error</Link></li>
+            <li><Link href="/shop">Shop</Link></li>
+            {/* <li><Link href="/product-details">Product Details</Link></li> */}
+            {/* <li><Link href="/cart">Cart</Link></li> */}
+            {/* <li><Link href="/checkout">Checkout</Link></li> */}
+            <li><Link href="/about">About us</Link></li>
+            <li><Link href="/contact">Contact us</Link></li>
+            <li><Link href="/404">404 error</Link></li>
           </ul>
+          
         </Accordion.Collapse>
+
       </Accordion>
+
     </nav>
-    
+
   );
-  
+
 };
 const DeskTopMenu = () => {
   return (
@@ -106,9 +109,10 @@ const DeskTopMenu = () => {
           <li><Link href="/about">About us</Link></li>
           <li><Link href="/contact">Contact us</Link></li>
           <li><Link href="/404">404 error</Link></li>
-
         </ul>
+
       </div>
+
     </nav>
   );
 };
