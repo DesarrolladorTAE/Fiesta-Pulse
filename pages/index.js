@@ -120,16 +120,21 @@ const Index4 = () => {
                     </Tab.Pane>
                     <Tab.Pane className="tab-pane fade" eventKey="about-tap3">
                       <p>
-                        Modular stages, aluminum truss, and scrim backdrops to frame DJs and performers. Dress
-                        it up with LED panels, signage, and themed props to match brand colors or event palettes.
+                        Atmospheric effects enhance any event by creating immersive environments using
+                        fog, haze, snow, and special lighting effects. Perfect for concerts, weddings,
+                        festivals, and stage performances, they help build atmosphere and amplify
+                        visual impact.
                       </p>
+
                       <ul className="list-style-one my-30">
-                        <li>Modular stage decks (heights & skirting)</li>
-                        <li>Box/goalpost truss & totems</li>
-                        <li>Backdrops, scrims & star cloth</li>
-                        <li>LED wall add-ons & custom signage</li>
-                        <li>Delivery, assembly & safety compliance</li>
+                        <li>Smoke and fog machines for dynamic stage effects</li>
+                        <li>Haze generators for beam and laser visibility</li>
+                        <li>CO₂ jet cannons and cryo effects for high-energy shows</li>
+                        <li>Artificial snow and bubble machines for themed events</li>
+                        <li>Low-lying fog systems for dancing-on-clouds effects</li>
+                        <li>Setup, calibration, and operator support included</li>
                       </ul>
+
                     </Tab.Pane>
                   </Tab.Content>
                 </Tab.Container>

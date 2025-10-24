@@ -8724,3 +8724,202 @@ blockquote {
     right: 0;
     bottom: 10%;
     z-index: -1; }
+
+
+
+
+/* Evita que asome el siguiente slide */
+.slider-item-two { overflow: hidden; }
+
+/* --- Versión móvil optimizada --- */
+@media (max-width: 991px) {
+  .slider-two-active .slider-item-two {
+    min-height: 82vh;            /* casi pantalla completa */
+    padding: 96px 0;             /* menos padding, más área útil */
+    position: relative;
+  }
+
+  .slider-item-two .container { height: 100%; }
+
+  .slider-item-two .slide-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    /* centra el contenido sobre la imagen */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .slider-item-two .sub-title {
+    font-size: 12px;
+    margin-bottom: 6px;
+    letter-spacing: .4px;
+  }
+
+  .slider-item-two h2 {
+    margin: 0;
+    line-height: 1.1;
+    font-size: clamp(26px, 6vw, 36px); /* responsivo y legible */
+    text-wrap: balance;
+  }
+
+  .slider-item-two .theme-btn {
+    margin-top: 6px;
+  }
+
+  /* background a pantalla completa */
+  .slider-item-two .slider-image {
+    position: absolute;
+    inset: 0;                   /* top/right/bottom/left:0 */
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    opacity: 1 !important;      /* asegúrate que se vea en móvil */
+    background-size: cover;
+    background-position: center 35%; /* sube un poco el foco */
+  }
+
+  /* overlay para contraste (oscuro sutil) */
+  .slider-item-two .slider-image::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    /* degradé que mejora la lectura del texto */
+    background: linear-gradient(
+      180deg,
+      rgba(0,0,0,.55) 0%,
+      rgba(0,0,0,.35) 40%,
+      rgba(0,0,0,.55) 100%
+    );
+  }
+
+  /* iconos sociales más visibles y uniformes */
+  .social-style-two {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .social-style-two a {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 9999px;
+    background: rgba(255,255,255,.9);
+    color: #111 !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.18);
+  }
+  .social-style-two a i { font-size: 16px; }
+}
+
+/* Mantén la animación de escritorio si la usas */
+.slick-active .slider-image { opacity: 1; }
+.slick-slide { outline: none; }
+
+/* === Texto blanco y legible en móvil === */
+@media (max-width: 991px) {
+  .slider-item-two .sub-title,
+  .slider-item-two h1,
+  .slider-item-two h2,
+  .slider-item-two p {
+    color: #fff !important;                /* texto blanco */
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6); /* leve sombra para contraste */
+  }
+
+  /* Asegura que el botón siga resaltando */
+  .slider-item-two .theme-btn {
+    color: #fff;
+    background-color: var(--secondary-color); /* tu naranja corporativo */
+    border: none;
+    font-weight: 600;
+  }
+  .slider-item-two .theme-btn:hover {
+    background-color: #e86b00; /* tono más oscuro al pasar */
+  }
+
+  /* Iconos sociales oscuros → blancos */
+  .social-style-two a {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
+  .social-style-two a:hover {
+    background: rgba(255,255,255,0.3);
+  }
+}
+/* =======================
+   Redes sociales en menú móvil
+======================= */
+@media only screen and (max-width: 991px) {
+  .main-menu .navbar-collapse {
+    left: 0;
+    width: 100%;
+    position: absolute;
+    max-height: calc(100vh - 80px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(0,0,0,.08);
+    z-index: 999;
+  }
+
+  /* el UL no tiene fondo */
+  .main-menu .navbar-collapse > ul {
+    display: block;
+    padding: 25px 0;
+    background: transparent;
+  }
+
+  /* contenedor de redes */
+  .main-menu .navbar-collapse .mobile-socials {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    padding: 20px 0 30px;
+    border-top: 1px solid #eee;
+  }
+
+  /* botones circulares */
+  .main-menu .navbar-collapse .mobile-socials a {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #222 !important;             /* 👈 color forzado visible */
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    transition: all 0.25s ease-in-out;
+  }
+
+  /* el ícono hereda y se asegura que no quede transparente */
+  .main-menu .navbar-collapse .mobile-socials a i {
+    color: inherit !important;          /* 👈 usa el color del <a> */
+    opacity: 1 !important;
+    font-size: 18px !important;
+    visibility: visible !important;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  /* hover */
+  .main-menu .navbar-collapse .mobile-socials a:hover,
+  .main-menu .navbar-collapse .mobile-socials a:active,
+  .main-menu .navbar-collapse .mobile-socials a:focus {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff !important;             /* 👈 ahora blanco sobre naranja */
+    transform: translateY(-2px);
+    outline: none;
+  }
+}
+
+
+

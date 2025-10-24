@@ -33,6 +33,18 @@ export default class Hero4Slider extends Component {
                     Let’s Get Started <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
+                            <div className="social-style-two">
+              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
+                <i className="fab fa-facebook-f" />
+              </a>
+
+              <a href="https://www.instagram.com/fiesta_pulse">
+                <i className="fab fa-instagram" />
+              </a>
+              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
+                <i className="fab fa-tiktok" />
+              </a>
+            </div>
               </div>
             </div>
             <div
@@ -52,13 +64,25 @@ export default class Hero4Slider extends Component {
                     Let’s Get Started <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
+                            <div className="social-style-two">
+              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
+                <i className="fab fa-facebook-f" />
+              </a>
+
+              <a href="https://www.instagram.com/fiesta_pulse">
+                <i className="fab fa-instagram" />
+              </a>
+              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
+                <i className="fab fa-tiktok" />
+              </a>
+            </div>
 
               </div>
             </div>
             <div
               className="slider-image"
               style={{
-                backgroundImage: "url(assets/images/services/lucesmas.jpeg)",
+                backgroundImage: "url(assets/images/services/lala.jpg)",
               }}
             />
           </div>
@@ -72,6 +96,18 @@ export default class Hero4Slider extends Component {
                     Let’s Get Started <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
+                            <div className="social-style-two">
+              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
+                <i className="fab fa-facebook-f" />
+              </a>
+
+              <a href="https://www.instagram.com/fiesta_pulse">
+                <i className="fab fa-instagram" />
+              </a>
+              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
+                <i className="fab fa-tiktok" />
+              </a>
+            </div>
               </div>
             </div>
             <div
@@ -92,6 +128,18 @@ export default class Hero4Slider extends Component {
                     Let’s Get Started <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
+                            <div className="social-style-two">
+              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
+                <i className="fab fa-facebook-f" />
+              </a>
+
+              <a href="https://www.instagram.com/fiesta_pulse">
+                <i className="fab fa-instagram" />
+              </a>
+              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
+                <i className="fab fa-tiktok" />
+              </a>
+            </div>
               </div>
             </div>
             <div
@@ -111,6 +159,18 @@ export default class Hero4Slider extends Component {
                     Let’s Get Started <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
+                            <div className="social-style-two">
+              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
+                <i className="fab fa-facebook-f" />
+              </a>
+
+              <a href="https://www.instagram.com/fiesta_pulse">
+                <i className="fab fa-instagram" />
+              </a>
+              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
+                <i className="fab fa-tiktok" />
+              </a>
+            </div>
               </div>
             </div>
             <div

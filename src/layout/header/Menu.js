@@ -44,25 +44,46 @@ const MobileMenu = () => {
           </Accordion.Toggle>
 
         </div>
-        <Accordion.Collapse
-          eventKey="collapse"
-          className="navbar-collapse clearfix"
-        >
-          <ul className="navigation clearfix">
-            <li>
-              <Link href="/">Home</Link>
-            </li>
+<Accordion.Collapse
+  eventKey="collapse"
+  className="navbar-collapse clearfix"
+>
+  <div>
+    <ul className="navigation clearfix">
+      <li><Link href="/">Home</Link></li>
+      <li><Link href="/shop">Shop</Link></li>
+      {/* <li><Link href="/product-details">Product Details</Link></li> */}
+      {/* <li><Link href="/cart">Cart</Link></li> */}
+      {/* <li><Link href="/checkout">Checkout</Link></li> */}
+      <li><Link href="/about">About us</Link></li>
+      <li><Link href="/contact">Contact us</Link></li>
+      <li><Link href="/404">404 error</Link></li>
+    </ul>
 
-            <li><Link href="/shop">Shop</Link></li>
-            {/* <li><Link href="/product-details">Product Details</Link></li> */}
-            {/* <li><Link href="/cart">Cart</Link></li> */}
-            {/* <li><Link href="/checkout">Checkout</Link></li> */}
-            <li><Link href="/about">About us</Link></li>
-            <li><Link href="/contact">Contact us</Link></li>
-            <li><Link href="/404">404 error</Link></li>
-          </ul>
-          
-        </Accordion.Collapse>
+    {/* Socials (móvil) */}
+    <div className="social-style-two mobile-socials">
+      <a
+        href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL"
+        target="_blank" rel="noopener noreferrer" aria-label="Facebook"
+      >
+        <i className="fab fa-facebook-f" />
+      </a>
+      <a
+        href="https://www.instagram.com/fiesta_pulse"
+        target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+      >
+        <i className="fab fa-instagram" />
+      </a>
+      <a
+        href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1"
+        target="_blank" rel="noopener noreferrer" aria-label="TikTok"
+      >
+        <i className="fab fa-tiktok" />
+      </a>
+    </div>
+  </div>
+</Accordion.Collapse>
+
 
       </Accordion>
 
