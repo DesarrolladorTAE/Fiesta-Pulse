@@ -41,7 +41,7 @@ const Index4 = () => {
               <div className="about-four-content mb-65 rel z-1 wow fadeInLeft delay-0-2s">
                 <div className="section-title mb-50">
                   <span className="sub-title mb-15">Products for Sale</span>
-                  <h2>DJ Gear, Lighting & Stage for Events</h2>
+                  <h2>DJ Gear, Lighting & Atmospheric Effects</h2>
                   <span className="bg-text">Sale</span>
                 </div>
                 <Tab.Container defaultActiveKey={"about-tap1"}>

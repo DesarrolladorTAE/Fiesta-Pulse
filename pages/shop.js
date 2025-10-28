@@ -3,11 +3,36 @@ import { useEffect, useMemo, useState } from "react";
 import PageBanner from "@/components/PageBanner";
 import Layout from "@/layout";
 import Link from "next/link";
-import { getPublicCategories, getPublicProducts } from "../src/services/public/index";
 
-const STORE_ID = 16; // 👈 set the store ID you want
+import FloatingCartBubble from "@/components/shop/FloatingCartBubble";
+import ProductQuickViewModal from "@/components/shop/ProductQuickViewModal";
 
-// Helpers
+import {
+  getPublicCategories,
+  getPublicProducts,
+  getPublicProductDetails,
+} from "../src/services/public/index";
+
+const STORE_ID = 16;
+const PER_PAGE = 12;
+
+/* Helpers */
+function computeDiscount(price, discount) {
+  const p = Number(price) || 0;
+  const d = Number(discount) || 0;
+  if (d <= 0 || p <= 0) return { final: p, pct: 0, type: "none" };
+  if (d > 0 && d <= 1) {
+    const final = Math.max(0, p * (1 - d));
+    return { final, pct: Math.round(d * 100), type: "fraction" };
+  }
+  if (d > 1 && d <= 100 && Number.isInteger(d)) {
+    const final = Math.max(0, p * (1 - d / 100));
+    return { final, pct: Math.round(d), type: "percent" };
+  }
+  const final = Math.max(0, p - d);
+  const pct = Math.round((d / p) * 100);
+  return { final, pct, type: "absolute" };
+}
 function shuffle(arr = []) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -16,9 +41,11 @@ function shuffle(arr = []) {
   }
   return a;
 }
-
 function pickRandom(arr = [], n = 1) {
   return shuffle(arr).slice(0, n);
+}
+function money(n) {
+  return `$${Number(n ?? 0).toFixed(2)}`;
 }
 
 export default function Shop() {
@@ -26,14 +53,25 @@ export default function Shop() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [query, setQuery] = useState("");
-  const [catQuery, setCatQuery] = useState(""); // category search
+  const [catQuery, setCatQuery] = useState("");
   const [activeCatId, setActiveCatId] = useState(null);
   const [sort, setSort] = useState("default"); // default | new | old | high | low
-  const [view, setView] = useState("grid"); // grid | list
-
-  // Client-side pagination
+  const [view, setView] = useState("grid"); // 'grid' | 'list'
   const [page, setPage] = useState(1);
-  const PER_PAGE = 12;
+
+  // Carrito
+  const [cart, setCart] = useState([]);
+  useEffect(() => {
+    const saved = localStorage.getItem("public_cart");
+    if (saved) setCart(JSON.parse(saved));
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("public_cart", JSON.stringify(cart));
+  }, [cart]);
+
+  // Modal
+  // const [modalOpen, setModalOpen] = useState(false);
+  const [modalProduct, setModalProduct] = useState(null);
 
   useEffect(() => {
     let cancel = false;
@@ -56,7 +94,7 @@ export default function Shop() {
     return () => { cancel = true; };
   }, []);
 
-  // Filtered products (search + category + sorting)
+  // Filtros + orden
   const filtered = useMemo(() => {
     let data = [...products];
 
@@ -81,7 +119,6 @@ export default function Shop() {
 
     switch (sort) {
       case "new":
-        // Prefer created_at when available; fallback to id desc
         data.sort((a, b) => {
           const ad = a?.created_at ? new Date(a.created_at).getTime() : 0;
           const bd = b?.created_at ? new Date(b.created_at).getTime() : 0;
@@ -110,7 +147,7 @@ export default function Shop() {
     return data;
   }, [products, query, activeCatId, sort, categories]);
 
-  // Pagination slice
+  // Paginación calculada
   const total = filtered.length;
   const lastPage = Math.max(1, Math.ceil(total / PER_PAGE));
   const pageSafe = Math.min(page, lastPage);
@@ -130,25 +167,22 @@ export default function Shop() {
     setPage(1);
   };
 
-  // Category search + limit to 10 random
+  // Categorías visibles (buscador + aleatorio a 10)
   const visibleCategories = useMemo(() => {
     const base = categories || [];
     const filteredCats = catQuery.trim()
       ? base.filter((c) =>
-          String(c.name || "").toLowerCase().includes(catQuery.trim().toLowerCase())
-        )
+        String(c.name || "").toLowerCase().includes(catQuery.trim().toLowerCase())
+      )
       : base;
-    const limited = pickRandom(filteredCats, Math.min(10, filteredCats.length));
-    return limited;
+    return pickRandom(filteredCats, Math.min(10, filteredCats.length));
   }, [categories, catQuery]);
 
-  // Popular tags: 5 random category names
   const popularTags = useMemo(() => {
     const names = (categories || []).map((c) => c.name).filter(Boolean);
     return pickRandom(names, Math.min(5, names.length));
   }, [categories]);
 
-  // Best Seller: 3 most recent products
   const bestSellers = useMemo(() => {
     const copy = [...products];
     copy.sort((a, b) => {
@@ -160,9 +194,44 @@ export default function Shop() {
     return copy.slice(0, 3);
   }, [products]);
 
+  /* ------- Cart actions ------- */
+  const addToCart = (p, qty = 1) => {
+    setCart((old) => {
+      const exists = old.find((x) => x.id === p.id);
+      const img = Array.isArray(p.image) ? p.image[0] : (p.image || null);
+      const price =
+        Number(p.discount) > 0 ? Math.max(0, Number(p.price) - Number(p.discount)) : Number(p.price || 0);
+
+      if (exists) {
+        return old.map((x) => x.id === p.id ? { ...x, qty: (x.qty || 1) + qty } : x);
+      }
+      return [...old, { id: p.id, name: p.name, price, qty, image: img }];
+    });
+  };
+  const removeFromCart = (id) => setCart((old) => old.filter((x) => x.id !== id));
+  const changeQty = (id, qty) =>
+    setCart((old) => old.map((x) => x.id === id ? { ...x, qty: Math.max(1, qty) } : x));
+  const goCheckout = () => {
+    window.location.href = `/checkout?store=${STORE_ID}`;
+  };
+
+  /* ------- Modal actions ------- */
+  const openQuickView = async (p) => {
+    try {
+      const detail = await getPublicProductDetails(STORE_ID, p.id);
+      setModalProduct(detail || p);
+    } catch {
+      setModalProduct(p);
+    } finally {
+      setModalOpen(true);
+    }
+  };
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
     <Layout>
       <PageBanner pageName={"Shop"} />
+
       <section className="shop-page-area py-130 rpy-100">
         <div className="container">
           {/* Top controls */}
@@ -183,35 +252,63 @@ export default function Shop() {
                 <option value="low-to-high">Low To High</option>
               </select>
             </div>
-            <ul className="grid-list">
-              <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setView("grid");
-                  }}
-                >
-                  <i className="fal fa-border-all" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setView("list");
-                  }}
-                >
-                  <i className="far fa-list" />
-                </a>
-              </li>
-            </ul>
           </div>
 
           <div className="row gap-60">
-            {/* Sidebar */}
-            <div className="col-lg-3">
+            {/* ====== MOBILE FILTERS (primero) ====== */}
+            <div className="col-12 d-lg-none">
+              <div className="mobile-filters card p-3 mb-3">
+                <div className="mb-2">
+                  <label className="form-label" style={{ fontWeight: 600 }}>Search products</label>
+                  <div className="d-flex gap-2">
+                    <input
+                      type="search"
+                      className="form-control"
+                      placeholder="Name, SKU or keywords"
+                      value={query}
+                      onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+                    />
+                    {query && (
+                      <button className="btn btn-outline-secondary" onClick={() => setQuery("")}>
+                        <i className="far fa-times" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mb-2">
+                  <label className="form-label" style={{ fontWeight: 600 }}>Search categories</label>
+                  <input
+                    type="search"
+                    className="form-control"
+                    placeholder="Type to filter…"
+                    value={catQuery}
+                    onChange={(e) => setCatQuery(e.target.value)}
+                  />
+                </div>
+
+                <div className="d-flex flex-wrap gap-8 mt-2">
+                  <button
+                    className={`btn btn-sm ${activeCatId === null ? "btn-dark" : "btn-outline-dark"}`}
+                    onClick={() => { setActiveCatId(null); setPage(1); }}
+                  >
+                    All ({products.length})
+                  </button>
+                  {visibleCategories.map((c) => (
+                    <button
+                      key={c.id}
+                      className={`btn btn-sm ${activeCatId === c.id ? "btn-primary" : "btn-outline-primary"}`}
+                      onClick={() => { setActiveCatId(c.id); setPage(1); }}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ====== SIDEBAR (solo desktop) ====== */}
+            <div className="col-lg-3 d-none d-lg-block">
               <div className="shop-sidebar rmb-75">
                 {/* Search */}
                 <div className="widget widget-search wow fadeInUp delay-0-2s">
@@ -220,17 +317,14 @@ export default function Shop() {
                       type="text"
                       placeholder="Search products"
                       value={query}
-                      onChange={(e) => {
-                        setQuery(e.target.value);
-                        setPage(1);
-                      }}
+                      onChange={(e) => { setQuery(e.target.value); setPage(1); }}
                       required
                     />
                     <button type="submit" className="searchbutton far fa-search" />
                   </form>
                 </div>
 
-                {/* Categories with search + random 10 */}
+                {/* Categories */}
                 <div className="widget widget-category wow fadeInUp delay-0-4s">
                   <h5 className="widget-title">Category</h5>
 
@@ -245,14 +339,7 @@ export default function Shop() {
 
                   <ul>
                     <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setActiveCatId(null);
-                          setPage(1);
-                        }}
-                      >
+                      <a href="#" onClick={(e) => { e.preventDefault(); setActiveCatId(null); setPage(1); }}>
                         All
                       </a>{" "}
                       <span>({products.length})</span>
@@ -261,11 +348,7 @@ export default function Shop() {
                       <li key={c.id}>
                         <a
                           href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setActiveCatId(c.id);
-                            setPage(1);
-                          }}
+                          onClick={(e) => { e.preventDefault(); setActiveCatId(c.id); setPage(1); }}
                           className={activeCatId === c.id ? "active" : ""}
                         >
                           {c.name}
@@ -275,7 +358,7 @@ export default function Shop() {
                   </ul>
                 </div>
 
-                {/* Best Seller = 3 most recent */}
+                {/* Best Seller */}
                 <div className="widget widget-products wow fadeInUp delay-0-2s">
                   <h5 className="widget-title">Best Products</h5>
                   <ul>
@@ -288,18 +371,11 @@ export default function Shop() {
                           </div>
                           <div className="content">
                             <div className="ratting">
-                              <i className="fas fa-star" />
-                              <i className="fas fa-star" />
-                              <i className="fas fa-star" />
-                              <i className="fas fa-star" />
-                              <i className="fas fa-star" />
+                              <i className="fas fa-star" /><i className="fas fa-star" /><i className="fas fa-star" />
+                              <i className="fas fa-star" /><i className="fas fa-star" />
                             </div>
-                            <h5>
-                              <Link legacyBehavior href="#">
-                                {p.name}
-                              </Link>
-                            </h5>
-                            <span className="price">${Number(p.price ?? 0).toFixed(2)}</span>
+                            <h5>{p.name}</h5>
+                            <span className="price">{money(p.price)}</span>
                           </div>
                         </li>
                       );
@@ -307,22 +383,20 @@ export default function Shop() {
                   </ul>
                 </div>
 
-                {/* Popular Tags = 5 random category names */}
+                {/* Popular Tags */}
                 <div className="widget widget-tag-cloud wow fadeInUp delay-0-2s">
                   <h5 className="widget-title">Popular Categories</h5>
                   <div className="tag-coulds">
                     {popularTags.length === 0 && <span>No tags</span>}
                     {popularTags.map((t, i) => (
-                      <Link key={t + i} legacyBehavior href="#">
-                        {t}
-                      </Link>
+                      <Link key={t + i} legacyBehavior href="#">{t}</Link>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Products */}
+            {/* ====== PRODUCTS ====== */}
             <div className="col-lg-9">
               <div className={`row ${view === "grid" ? "" : "d-none"}`}>
                 {loading && <div className="col-12"><p>Loading products…</p></div>}
@@ -331,37 +405,74 @@ export default function Shop() {
                 {pageItems.map((p) => {
                   const img = Array.isArray(p.image) ? p.image[0] : null;
                   const price = Number(p.price ?? 0);
-                  const hasDiscount = !!p.discount && Number(p.discount) > 0;
-                  const finalPrice = hasDiscount ? Math.max(0, price - Number(p.discount)) : price;
+                  const { final: finalPrice, pct: discountPct } = computeDiscount(price, p.discount);
+                  const hasDiscount = discountPct > 0;
 
                   return (
                     <div key={p.id} className="col-lg-4 col-sm-6">
-                      <div className="product-item wow fadeInUp delay-0-2s">
-                        <div className="image">
-                          <img src={img || "/assets/images/logos/logo-one.png"} alt="Product" />
+                      <div className="product-item wow fadeInUp delay-0-2s" style={{ position: "relative", overflow: "hidden" }}>
+                        <div className="image" style={{ position: "relative", zIndex: 1 }}>
+                          {p.new ? (
+                            <span
+                              style={{
+                                position: "absolute", left: 10, top: 10, background: "#111", color: "#fff",
+                                padding: "4px 8px", borderRadius: 8, fontSize: 12, letterSpacing: 0.4, zIndex: 5
+                              }}
+                            >
+                              NEW
+                            </span>
+                          ) : null}
+
+                          {hasDiscount ? (
+                            <span
+                              style={{
+                                position: "absolute", right: 10, top: 10, background: "#e63946", color: "#fff",
+                                padding: "4px 8px", borderRadius: 8, fontSize: 12, fontWeight: 700, zIndex: 5
+                              }}
+                            >
+                              -{discountPct}%
+                            </span>
+                          ) : null}
+
+                          {/* Imagen unificada */}
+                          <div className="product-thumb">
+                            <img
+                              src={img || "/assets/images/logos/logo-one.png"}
+                              alt={p.name}
+                              loading="lazy"
+                            />
+                          </div>
+
                           <div className="social-style-two">
-                            <a href="#"><i className="far fa-shopping-cart" /></a>
-                            <a href="#"><i className="far fa-heart" /></a>
-                            <a href="#"><i className="far fa-eye" /></a>
+                            <a href="#" title="Agregar al carrito" onClick={(e) => { e.preventDefault(); addToCart(p, 1); }}>
+                              <i className="far fa-shopping-cart" />
+                            </a>
+                            <a href="#" title="Vista rápida" onClick={(e) => { e.preventDefault(); openQuickView(p); }}>
+                              <i className="far fa-eye" />
+                            </a>
                           </div>
                         </div>
-                        <div className="content">
+
+                        {/* Contenido */}
+                        <div className="content" style={{ padding: "8px 4px" }}>
+                          <div className="ratting" style={{ marginTop: 6 }}>
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <i key={i} className={`fas fa-star${i < Math.round(Number(p.rating) || 0) ? "" : "-o"}`} />
+                            ))}
+                          </div>
+
                           <div className="title-price">
-                            <h5>
-                              <Link legacyBehavior href="#">
-                                {p.name}
-                              </Link>
-                            </h5>
-                            <div className="price">
+                            <h5><Link legacyBehavior href="#">{p.name}</Link></h5>
+                            <div className="price no-dollar">
                               {hasDiscount ? (
                                 <>
                                   <span style={{ textDecoration: "line-through", opacity: 0.6, marginRight: 8 }}>
-                                    {price.toFixed(2)}
+                                    {money(price)}
                                   </span>
-                                  <span>${finalPrice.toFixed(2)}</span>
+                                  <span>{money(finalPrice)}</span>
                                 </>
                               ) : (
-                                <>{finalPrice.toFixed(2)}</>
+                                <>{money(finalPrice)}</>
                               )}
                             </div>
                           </div>
@@ -372,42 +483,10 @@ export default function Shop() {
                 })}
               </div>
 
-              {view === "list" && (
-                <div className="row">
-                  <div className="col-12">
-                    {pageItems.map((p) => {
-                      const img = Array.isArray(p.image) ? p.image[0] : null;
-                      const price = Number(p.price ?? 0);
-                      return (
-                        <div key={p.id} className="product-item d-flex align-items-center mb-20 wow fadeInUp delay-0-2s">
-                          <div className="image" style={{ maxWidth: 120, marginRight: 16 }}>
-                            <img src={img || "/assets/images/shop/product1.jpg"} alt="Product" />
-                          </div>
-                          <div className="content" style={{ flex: 1 }}>
-                            <div className="title-price d-flex justify-content-between">
-                              <h5 style={{ marginRight: 16 }}>{p.name}</h5>
-                              <div className="price">${price.toFixed(2)}</div>
-                            </div>
-                            <p className="mb-0" style={{ opacity: 0.8 }}>{p.shortDescription || ""}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* Pagination */}
               <ul className="pagination flex-wrap wow fadeInUp delay-0-2s">
                 <li className={`page-item ${pageSafe <= 1 ? "disabled" : ""}`}>
-                  <a
-                    className="page-link"
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage(Math.max(1, pageSafe - 1));
-                    }}
-                  >
+                  <a className="page-link" href="#" onClick={(e) => { e.preventDefault(); setPage(Math.max(1, pageSafe - 1)); }}>
                     <i className="fas fa-chevron-left" />
                   </a>
                 </li>
@@ -415,36 +494,91 @@ export default function Shop() {
                   const n = idx + 1;
                   return (
                     <li key={n} className={`page-item ${pageSafe === n ? "active" : ""}`}>
-                      <a
-                        className="page-link"
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setPage(n);
-                        }}
-                      >
+                      <a className="page-link" href="#" onClick={(e) => { e.preventDefault(); setPage(n); }}>
                         {String(n).padStart(2, "0")}
                       </a>
                     </li>
                   );
                 })}
                 <li className={`page-item ${pageSafe >= lastPage ? "disabled" : ""}`}>
-                  <a
-                    className="page-link"
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage(Math.min(lastPage, pageSafe + 1));
-                    }}
-                  >
+                  <a className="page-link" href="#" onClick={(e) => { e.preventDefault(); setPage(Math.min(lastPage, pageSafe + 1)); }}>
                     <i className="fas fa-chevron-right" />
                   </a>
                 </li>
               </ul>
+
+              {/* ====== EXTRA WIDGETS al final SOLO en móvil ====== */}
+              <div className="d-lg-none mt-4">
+                {/* Best Products (móvil) */}
+                <div className="widget widget-products wow fadeInUp delay-0-2s mb-4">
+                  <h5 className="widget-title">Best Products</h5>
+                  <ul>
+                    {bestSellers.map((p, i) => {
+                      const img = Array.isArray(p.image) ? p.image[0] : null;
+                      return (
+                        <li key={String(p.id) + "-best-m-" + i}>
+                          <div className="image">
+                            <img src={img || "/assets/images/logos/logo-one.png"} alt="Product" />
+                          </div>
+                          <div className="content">
+                            <div className="ratting">
+                              <i className="fas fa-star" /><i className="fas fa-star" /><i className="fas fa-star" />
+                              <i className="fas fa-star" /><i className="fas fa-star" />
+                            </div>
+                            <h5>{p.name}</h5>
+                            <span className="price">{money(p.price)}</span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+
+                {/* Popular Categories (móvil) */}
+                <div className="widget widget-tag-cloud wow fadeInUp delay-0-2s">
+                  <h5 className="widget-title">Popular Categories</h5>
+                  <div className="tag-coulds">
+                    {popularTags.length === 0 && <span>No tags</span>}
+                    {popularTags.map((t, i) => (
+                      <Link key={t + "-m-" + i} legacyBehavior href="#">{t}</Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Burbuja flotante del carrito */}
+        <FloatingCartBubble
+          items={cart}
+          onRemove={removeFromCart}
+          onQty={changeQty}
+          onCheckout={goCheckout}
+        />
+
+        {/* Modal de vista rápida */}
+        <ProductQuickViewModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          product={modalProduct}
+          onAddToCart={(p, qty) => { addToCart(p, qty); setModalOpen(false); }}
+          onPayNow={(p, qty) => { addToCart(p, qty); setModalOpen(false); goCheckout(); }}
+        />
       </section>
+
+      <style jsx global>{`
+        .price.no-dollar::before { content: none !important; }
+        .product-badge { font-family: sans-serif; font-weight: 600; text-transform: uppercase; }
+
+        /* Imagen de tarjeta unificada */
+        .product-thumb { width: 100%; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 6px; background: #fff; }
+        .product-thumb > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        /* Móvil: mejora chips/espaciados */
+        .mobile-filters .btn { margin: 4px 6px 0 0; }
+        .gap-8 { gap: 8px; }
+      `}</style>
     </Layout>
   );
 }

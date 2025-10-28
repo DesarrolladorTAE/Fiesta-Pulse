@@ -8921,5 +8921,215 @@ blockquote {
   }
 }
 
+/* Qty del modal y tarjetas: asegura texto visible */
+.quantity-input input,
+[role="dialog"] input[type="number"] {
+  color: var(--heading-color) !important;   /* #0b0b0b por defecto */
+  background: #fff !important;
+  border: 1px solid var(--border-color) !important;
+}
 
+/* (Opcional) Evita que otros inputs transparentes “desaparezcan” en fondos claros */
+.widget-search form input,
+.product-details-content .add-to-cart input {
+  color: var(--heading-color) !important;
+}
+
+/* Si usas WebKit (Safari/Android) y aún no se ve, añade: */
+[role="dialog"] input[type="number"] {
+  -webkit-text-fill-color: var(--heading-color) !important;
+}
+
+
+  /* Tamaño unificado para todas las tarjetas de producto */
+  .product-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;      /* 👈 Elige 1/1, 3/4, 4/5, 16/9, etc. */
+    overflow: hidden;
+    border-radius: 6px;
+    background: #f7f7f7;      /* fallback si tarda en cargar */
+  }
+  .product-thumb > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;        /* recorta sin deformar */
+  }
+
+  /* Best Products (mini) - relación distinta para el sidebar */
+  .product-thumb--sm {
+    aspect-ratio: 1 / 1;
+    width: 72px;
+    border-radius: 6px;
+  }
+
+  /* Mantén tus estilos existentes */
+  .price.no-dollar::before { content: none !important; }
+  .product-badge { font-family: sans-serif; font-weight: 600; text-transform: uppercase; }
+
+
+
+        .pqv-media {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          background: #f8f8f8;
+          padding: 10px;
+          overflow: hidden;
+        }
+        .pqv-thumb {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 4 / 5;
+          overflow: hidden;
+          border-radius: 10px;
+          background: #fff;
+        }
+        .pqv-thumb > img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .pqv-nav {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 36px; height: 36px;
+          border: none; border-radius: 999px;
+          background: rgba(17,17,17,.55);
+          color: #fff; font-size: 20px; line-height: 36px;
+          cursor: pointer;
+        }
+        .pqv-prev { left: 10px; }
+        .pqv-next { right: 10px; }
+
+        /* Thumbs con scroll horizontal en móvil */
+        .pqv-thumbs {
+          overflow: hidden;
+        }
+        .pqv-thumbs-track {
+          display: flex;
+          gap: 8px;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          padding-bottom: 6px;
+          scrollbar-width: thin;
+        }
+        .pqv-thumbs-track::-webkit-scrollbar { height: 6px; }
+        .pqv-thumbs-track::-webkit-scrollbar-thumb { background: #ddd; border-radius: 999px; }
+
+        .pqv-thumb-btn {
+          position: relative;
+          flex: 0 0 auto;
+          width: 64px; height: 64px;
+          border: 2px solid transparent;
+          border-radius: 8px;
+          overflow: hidden;
+          cursor: pointer;
+          padding: 0;
+          background: none;
+          transition: border-color .2s ease, transform .1s ease;
+        }
+        .pqv-thumb-btn:hover { transform: translateY(-1px); }
+        .pqv-thumb-btn.active { border-color: #e63946; }
+        .pqv-thumb-btn img {
+          width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .pqv-gif-badge {
+          position: absolute; right: 4px; bottom: 4px;
+          background: #111; color: #fff; font-size: 10px;
+          padding: 2px 6px; border-radius: 999px;
+          letter-spacing: .5px;
+        }
+
+        .pqv-info {
+          padding: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          overflow: auto;          /* ⬅️ scroll interno si hace falta */
+        }
+        .pqv-close {
+          border: none; background: transparent; font-size: 20px; line-height: 1;
+        }
+
+        .pqv-qty-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 8px;
+          flex-wrap: wrap;
+        }
+        .pqv-btn-minor {
+          border: 1px solid #ddd;
+          width: 32px; height: 32px;
+          border-radius: 8px;
+          background: #fafafa;
+        }
+        .qty-box {
+          width: 120px;
+          height: 36px;
+          text-align: center;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          background: #fff;
+          font-weight: 700;
+          font-size: 16px;
+          line-height: 36px;
+          color: #111 !important;
+          -webkit-text-fill-color: #111 !important;
+          text-indent: 0 !important;
+          caret-color: #111 !important;
+          -moz-appearance: textfield;
+        }
+        .qty-box::-webkit-outer-spin-button,
+        .qty-box::-webkit-inner-spin-button {
+          -webkit-appearance: none; margin: 0;
+        }
+
+        .pqv-cta {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-top: auto;
+        }
+
+        /* ======= Responsive ======= */
+        @media (max-width: 992px) {
+          [role="dialog"] > div {
+            grid-template-columns: 1fr !important;   /* 1 columna */
+            height: 95vh;                             /* ocupa alto útil */
+          }
+          .pqv-thumb {
+            aspect-ratio: 1 / 1;                      /* cuadrado queda mejor en móvil */
+            max-height: 60vh;
+          }
+          .pqv-thumb-btn { width: 56px; height: 56px; }
+        }
+
+        @media (max-width: 520px) {
+          .pqv-cta { grid-template-columns: 1fr; }   /* botones apilados */
+          .qty-box { width: 100px; }
+          .pqv-btn-minor { width: 28px; height: 28px; }
+        }
+
+
+/* global.css */
+:root {
+  --fab-bottom: 96px;    /* móvil: despeje del ScrollTop */
+}
+@media (min-width: 992px) {
+  :root { --fab-bottom: 24px; } /* desktop: ya no estorba */
+}
+
+/* burbuja del carrito */
+.fab-cart {
+  bottom: var(--fab-bottom) !important;
+  right: 16px !important;
+}
 

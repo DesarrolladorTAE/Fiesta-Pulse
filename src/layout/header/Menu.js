@@ -57,7 +57,7 @@ const MobileMenu = () => {
       {/* <li><Link href="/checkout">Checkout</Link></li> */}
       <li><Link href="/about">About us</Link></li>
       <li><Link href="/contact">Contact us</Link></li>
-      <li><Link href="/404">404 error</Link></li>
+      {/* <li><Link href="/404">404 error</Link></li> */}
     </ul>
 
     {/* Socials (móvil) */}
@@ -129,7 +129,7 @@ const DeskTopMenu = () => {
           {/* <li><Link href="/checkout">Checkout</Link></li> */}
           <li><Link href="/about">About us</Link></li>
           <li><Link href="/contact">Contact us</Link></li>
-          <li><Link href="/404">404 error</Link></li>
+          {/* <li><Link href="/404">404 error</Link></li> */}
         </ul>
 
       </div>
