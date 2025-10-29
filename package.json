@@ -17,6 +17,7 @@
     "react-circular-progressbar": "^2.1.0",
     "react-countup": "^6.4.0",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.65.0",
     "react-slick": "^0.29.0",
     "react-visibility-sensor": "^5.1.1",
     "slick-carousel": "^1.8.1",

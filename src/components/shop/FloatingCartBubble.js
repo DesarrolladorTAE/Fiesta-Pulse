@@ -35,7 +35,7 @@ export default function FloatingCartBubble({
     border: "none",
     borderRadius: "999px",
     padding: "12px 16px",
-    background: "#111",
+    background: "#06c2d6",
     color: "#fff",
     boxShadow: "0 8px 24px rgba(0,0,0,.2)",
     display: "flex",
@@ -152,7 +152,7 @@ export default function FloatingCartBubble({
                       onQty(it.id, Math.max(1, Number(e.target.value) || 1))
                     }
                     style={{
-                      width: 48,
+                      width: 108,
                       height: 28,
                       textAlign: "center",
                       border: "1px solid #ddd",

@@ -9085,7 +9085,7 @@ blockquote {
           -webkit-text-fill-color: #111 !important;
           text-indent: 0 !important;
           caret-color: #111 !important;
-          -moz-appearance: textfield;
+          /* -moz-appearance: textfield; */
         }
         .qty-box::-webkit-outer-spin-button,
         .qty-box::-webkit-inner-spin-button {
@@ -9121,10 +9121,10 @@ blockquote {
 
 /* global.css */
 :root {
-  --fab-bottom: 96px;    /* móvil: despeje del ScrollTop */
+  --fab-bottom: 166px;    /* móvil: despeje del ScrollTop */
 }
 @media (min-width: 992px) {
-  :root { --fab-bottom: 24px; } /* desktop: ya no estorba */
+  :root { --fab-bottom: 80px } /* escritorio*/
 }
 
 /* burbuja del carrito */

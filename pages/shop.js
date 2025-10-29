@@ -15,37 +15,60 @@ import {
 
 const STORE_ID = 16;
 const PER_PAGE = 12;
+const CART_KEY = `public_cart_${STORE_ID}`;
 
-/* Helpers */
+/* ==== Helpers ==== */
 function computeDiscount(price, discount) {
   const p = Number(price) || 0;
   const d = Number(discount) || 0;
   if (d <= 0 || p <= 0) return { final: p, pct: 0, type: "none" };
-  if (d > 0 && d <= 1) {
-    const final = Math.max(0, p * (1 - d));
-    return { final, pct: Math.round(d * 100), type: "fraction" };
-  }
-  if (d > 1 && d <= 100 && Number.isInteger(d)) {
-    const final = Math.max(0, p * (1 - d / 100));
-    return { final, pct: Math.round(d), type: "percent" };
-  }
+  if (d > 0 && d <= 1) return { final: Math.max(0, p * (1 - d)), pct: Math.round(d * 100), type: "fraction" };
+  if (d > 1 && d <= 100 && Number.isInteger(d)) return { final: Math.max(0, p * (1 - d / 100)), pct: Math.round(d), type: "percent" };
   const final = Math.max(0, p - d);
   const pct = Math.round((d / p) * 100);
   return { final, pct, type: "absolute" };
 }
-function shuffle(arr = []) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-function pickRandom(arr = [], n = 1) {
-  return shuffle(arr).slice(0, n);
-}
-function money(n) {
-  return `$${Number(n ?? 0).toFixed(2)}`;
+function shuffle(arr = []) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; }
+function pickRandom(arr = [], n = 1) { return shuffle(arr).slice(0, n); }
+function money(n) { return `$${Number(n ?? 0).toFixed(2)}`; }
+
+/* ==== Hook de carrito local ==== */
+function useLocalCart(storageKey) {
+  const [items, setItems] = useState([]);
+
+  // Cargar al montar
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) setItems(JSON.parse(raw));
+    } catch { }
+  }, [storageKey]);
+
+  // Guardar (ligero debounce)
+  useEffect(() => {
+    const id = setTimeout(() => {
+      try { localStorage.setItem(storageKey, JSON.stringify(items || [])); } catch { }
+    }, 80);
+    return () => clearTimeout(id);
+  }, [items, storageKey]);
+
+  const add = (product, qty = 1) => {
+    setItems(prev => {
+      const i = prev.findIndex(p => p.id === product.id);
+      if (i >= 0) {
+        const clone = [...prev];
+        clone[i] = { ...clone[i], qty: (clone[i].qty || 1) + qty };
+        return clone;
+      }
+      return [...prev, { ...product, qty }];
+    });
+  };
+  const remove = (id) => setItems(prev => prev.filter(p => p.id !== id));
+  const setQty = (id, qty) =>
+    setItems(prev => prev.map(p => (p.id === id ? { ...p, qty: Math.max(1, qty) } : p)));
+  const clear = () => setItems([]);
+
+  return { items, add, remove, setQty, clear };
 }
 
 export default function Shop() {
@@ -55,23 +78,16 @@ export default function Shop() {
   const [query, setQuery] = useState("");
   const [catQuery, setCatQuery] = useState("");
   const [activeCatId, setActiveCatId] = useState(null);
-  const [sort, setSort] = useState("default"); // default | new | old | high | low
-  const [view, setView] = useState("grid"); // 'grid' | 'list'
+  const [sort, setSort] = useState("default");
+  const [view] = useState("grid");
   const [page, setPage] = useState(1);
 
-  // Carrito
-  const [cart, setCart] = useState([]);
-  useEffect(() => {
-    const saved = localStorage.getItem("public_cart");
-    if (saved) setCart(JSON.parse(saved));
-  }, []);
-  useEffect(() => {
-    localStorage.setItem("public_cart", JSON.stringify(cart));
-  }, [cart]);
+  // ✅ Carrito LOCAL con persistencia
+  const { items: cart, add, remove, setQty } = useLocalCart(CART_KEY);
 
   // Modal
-  // const [modalOpen, setModalOpen] = useState(false);
   const [modalProduct, setModalProduct] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -118,22 +134,16 @@ export default function Shop() {
     }
 
     switch (sort) {
-      case "new":
-        data.sort((a, b) => {
-          const ad = a?.created_at ? new Date(a.created_at).getTime() : 0;
-          const bd = b?.created_at ? new Date(b.created_at).getTime() : 0;
-          if (ad !== 0 || bd !== 0) return bd - ad;
-          return (Number(b?.id) || 0) - (Number(a?.id) || 0);
-        });
+      case "new": {
+        const byDate = (x) => x?.created_at ? new Date(x.created_at).getTime() : 0;
+        data.sort((a, b) => (byDate(b) || Number(b?.id) || 0) - (byDate(a) || Number(a?.id) || 0));
         break;
-      case "old":
-        data.sort((a, b) => {
-          const ad = a?.created_at ? new Date(a.created_at).getTime() : 0;
-          const bd = b?.created_at ? new Date(b.created_at).getTime() : 0;
-          if (ad !== 0 || bd !== 0) return ad - bd;
-          return (Number(a?.id) || 0) - (Number(b?.id) || 0);
-        });
+      }
+      case "old": {
+        const byDate = (x) => x?.created_at ? new Date(x.created_at).getTime() : 0;
+        data.sort((a, b) => (byDate(a) || Number(a?.id) || 0) - (byDate(b) || Number(b?.id) || 0));
         break;
+      }
       case "high":
         data.sort((a, b) => (Number(b?.price) || 0) - (Number(a?.price) || 0));
         break;
@@ -143,11 +153,10 @@ export default function Shop() {
       default:
         break;
     }
-
     return data;
   }, [products, query, activeCatId, sort, categories]);
 
-  // Paginación calculada
+  // Paginación
   const total = filtered.length;
   const lastPage = Math.max(1, Math.ceil(total / PER_PAGE));
   const pageSafe = Math.min(page, lastPage);
@@ -156,24 +165,16 @@ export default function Shop() {
   const pageItems = filtered.slice(sliceStart, sliceEnd);
 
   const handleSortChange = (val) => {
-    const map = {
-      default: "default",
-      New: "new",
-      old: "old",
-      "hight-to-low": "high",
-      "low-to-high": "low",
-    };
+    const map = { default: "default", New: "new", old: "old", "hight-to-low": "high", "low-to-high": "low" };
     setSort(map[val] || "default");
     setPage(1);
   };
 
-  // Categorías visibles (buscador + aleatorio a 10)
+  // Categorías visibles
   const visibleCategories = useMemo(() => {
     const base = categories || [];
     const filteredCats = catQuery.trim()
-      ? base.filter((c) =>
-        String(c.name || "").toLowerCase().includes(catQuery.trim().toLowerCase())
-      )
+      ? base.filter((c) => String(c.name || "").toLowerCase().includes(catQuery.trim().toLowerCase()))
       : base;
     return pickRandom(filteredCats, Math.min(10, filteredCats.length));
   }, [categories, catQuery]);
@@ -194,23 +195,15 @@ export default function Shop() {
     return copy.slice(0, 3);
   }, [products]);
 
-  /* ------- Cart actions ------- */
+  /* ------- Cart actions (LOCAL) ------- */
   const addToCart = (p, qty = 1) => {
-    setCart((old) => {
-      const exists = old.find((x) => x.id === p.id);
-      const img = Array.isArray(p.image) ? p.image[0] : (p.image || null);
-      const price =
-        Number(p.discount) > 0 ? Math.max(0, Number(p.price) - Number(p.discount)) : Number(p.price || 0);
-
-      if (exists) {
-        return old.map((x) => x.id === p.id ? { ...x, qty: (x.qty || 1) + qty } : x);
-      }
-      return [...old, { id: p.id, name: p.name, price, qty, image: img }];
-    });
+    const img = Array.isArray(p.image) ? p.image[0] : (p.image || null);
+    const price =
+      Number(p.discount) > 0 ? Math.max(0, Number(p.price) - Number(p.discount)) : Number(p.price || 0);
+    add({ id: p.id, name: p.name, price, image: img }, qty);
   };
-  const removeFromCart = (id) => setCart((old) => old.filter((x) => x.id !== id));
-  const changeQty = (id, qty) =>
-    setCart((old) => old.map((x) => x.id === id ? { ...x, qty: Math.max(1, qty) } : x));
+  const removeFromCart = (id) => remove(id);
+  const changeQty = (id, qty) => setQty(id, qty);
   const goCheckout = () => {
     window.location.href = `/checkout?store=${STORE_ID}`;
   };
@@ -226,7 +219,7 @@ export default function Shop() {
       setModalOpen(true);
     }
   };
-  const [modalOpen, setModalOpen] = useState(false);
+
 
   return (
     <Layout>
@@ -549,7 +542,7 @@ export default function Shop() {
           </div>
         </div>
 
-        {/* Burbuja flotante del carrito */}
+        {/* Burbuja flotante del carrito (LOCAL) */}
         <FloatingCartBubble
           items={cart}
           onRemove={removeFromCart}
@@ -570,12 +563,8 @@ export default function Shop() {
       <style jsx global>{`
         .price.no-dollar::before { content: none !important; }
         .product-badge { font-family: sans-serif; font-weight: 600; text-transform: uppercase; }
-
-        /* Imagen de tarjeta unificada */
         .product-thumb { width: 100%; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 6px; background: #fff; }
         .product-thumb > img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-        /* Móvil: mejora chips/espaciados */
         .mobile-filters .btn { margin: 4px 6px 0 0; }
         .gap-8 { gap: 8px; }
       `}</style>

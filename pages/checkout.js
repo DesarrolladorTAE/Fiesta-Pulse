@@ -1,479 +1,472 @@
-import PageBanner from "@/components/PageBanner";
+"use client";
 import Layout from "@/layout";
+import PageBanner from "@/components/PageBanner";
 import { Accordion } from "react-bootstrap";
-const Checkout = () => {
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import {
+  getPayPalSdkCredentials,
+  loadPayPalSdk,
+  createPayPalOrder,
+  capturePayPalOrder,
+} from "../src/services/public"; // ajusta la ruta si es necesario
+
+const STORE_ID = 16;
+const CART_KEY = `public_cart_${STORE_ID}`;
+const CUSTOMER_KEY = `public_checkout_customer_${STORE_ID}`;
+const ADDRESS_KEY = `public_checkout_address_${STORE_ID}`;
+const PREFS_KEY = `public_checkout_prefs_${STORE_ID}`;
+
+function money(n) {
+  return `$${Number(n || 0).toFixed(2)}`;
+}
+
+export default function Checkout() {
+  // ---- State ----
+  const [cart, setCart] = useState([]);
+  const [sdkReady, setSdkReady] = useState(false);
+  const [sdkCreds, setSdkCreds] = useState(null); // { client_id, currency }
+
+  const ppContainerRef = useRef(null);
+  const ppButtonsRef = useRef(null);
+  const [ppMounted, setPpMounted] = useState(false);
+
+  const [formReady, setFormReady] = useState(false);
+
+  // ---- Cart ----
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CART_KEY);
+      setCart(raw ? JSON.parse(raw) : []);
+    } catch {
+      setCart([]);
+    }
+  }, []);
+
+  const subtotal = useMemo(
+    () => (cart || []).reduce((a, b) => a + Number(b.price || 0) * (b.qty || 1), 0),
+    [cart]
+  );
+
+  // ---- Form ----
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm({
+    mode: "onTouched",
+    defaultValues: {
+      customer: { name: "", phone: "", email: "" },
+      address: "",
+      note: "",
+      terms: false,
+      pm: "paypal",
+    },
+  });
+
+  // Prefill from localStorage
+  useEffect(() => {
+    try {
+      const customer = JSON.parse(localStorage.getItem(CUSTOMER_KEY) || "null");
+      const address = localStorage.getItem(ADDRESS_KEY) || "";
+      const prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || "null");
+      if (customer || address || prefs) {
+        reset({
+          customer: customer || { name: "", phone: "", email: "" },
+          address,
+          note: (prefs && prefs.note) || "",
+          terms: !!(prefs && prefs.terms),
+          pm: (prefs && prefs.pm) || "paypal",
+        });
+      }
+    } catch {}
+  }, [reset]);
+
+  const persistCustomer = (data) => {
+    try {
+      localStorage.setItem(CUSTOMER_KEY, JSON.stringify(data));
+    } catch {}
+  };
+  const persistAddress = (val) => {
+    try {
+      localStorage.setItem(ADDRESS_KEY, val || "");
+    } catch {}
+  };
+  const persistPrefs = (partial) => {
+    try {
+      const prev = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+      localStorage.setItem(PREFS_KEY, JSON.stringify({ ...prev, ...partial }));
+    } catch {}
+  };
+
+  // Watch key fields to decide readiness
+  const wName = watch("customer.name");
+  const wPhone = watch("customer.phone");
+  const wEmail = watch("customer.email");
+  const wAddr = watch("address");
+  const wTerms = watch("terms");
+
+  useEffect(() => {
+    const okName = (wName || "").trim().length >= 2;
+    const okPhone = /^[0-9+\-()\s]{7,20}$/.test(String(wPhone || ""));
+    const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(wEmail || ""));
+    const okAddr = (wAddr || "").trim().length >= 6;
+    setFormReady(okName && okPhone && okEmail && okAddr && !!wTerms);
+  }, [wName, wPhone, wEmail, wAddr, wTerms]);
+
+  // ---- PayPal SDK ----
+  useEffect(() => {
+    (async () => {
+      try {
+        const creds = await getPayPalSdkCredentials(STORE_ID); // { client_id, currency, ... }
+        setSdkCreds(creds);
+        await loadPayPalSdk({ clientId: creds.client_id, currency: creds.currency });
+        setSdkReady(true);
+      } catch (e) {
+        console.error("[PayPal] SDK load failed:", e);
+      }
+    })();
+  }, []);
+
+  // Render PayPal buttons once when form is ready
+  useEffect(() => {
+    if (!sdkReady || !formReady || subtotal < 1) return;
+    if (!ppContainerRef.current) return;
+    if (!(window).paypal) return;
+    if (ppMounted) return;
+
+    const paypal = (window).paypal;
+
+    const instance = paypal.Buttons({
+      style: { layout: "vertical", shape: "rect", label: "paypal", height: 45 },
+
+      createOrder: async () => {
+        if (!formReady) throw new Error("form_not_ready");
+
+        const form = watch();
+        // Persist latest
+        persistCustomer(form.customer);
+        persistAddress(form.address);
+        persistPrefs({ note: form.note, terms: form.terms, pm: form.pm });
+
+        const items = (cart || []).map((it) => ({
+          name: it.name,
+          quantity: String(it.qty || 1),
+          unit_amount: {
+            value: Number(it.price || 0),
+            currency_code: (sdkCreds && sdkCreds.currency) || "MXN",
+          },
+        }));
+
+        const payload = {
+          amount: Number(subtotal.toFixed(2)),
+          currency: (sdkCreds && sdkCreds.currency) || "MXN",
+          reference_id: `store${STORE_ID}-${Date.now()}`,
+          items,
+          customer: {
+            name: form.customer && form.customer.name,
+            phone: form.customer && form.customer.phone,
+            email: form.customer && form.customer.email,
+            address: form.address,
+            note: form.note,
+          },
+          shipping_preference: "NO_SHIPPING",
+        };
+
+        const res = await createPayPalOrder(STORE_ID, payload);
+        if (!res || !res.ok || !res.order_id) throw new Error("order_create_failed");
+        return res.order_id;
+      },
+
+      onApprove: async (data) => {
+        try {
+          const orderId = data.orderID;
+          await capturePayPalOrder(STORE_ID, orderId);
+
+          // Clear cart after success
+          try {
+            localStorage.removeItem(CART_KEY);
+          } catch {}
+          setCart([]);
+          alert("Payment completed ✅");
+          // window.location.href = "/thank-you";
+        } catch (e) {
+          console.error("[PayPal] capture error:", e);
+          alert("We couldn't capture the payment. Please try again.");
+        }
+      },
+
+      onCancel: () => console.log("[PayPal] user cancelled"),
+      onError: (err) => {
+        console.error("[PayPal] error:", err);
+        alert("A PayPal error occurred.");
+      },
+    });
+
+    instance
+      .render(ppContainerRef.current)
+      .then(() => {
+        ppButtonsRef.current = instance;
+        setPpMounted(true);
+      })
+      .catch((e) => console.error("render paypal", e));
+  }, [sdkReady, formReady, subtotal, sdkCreds, cart, watch, ppMounted]);
+
+  // If form becomes invalid or subtotal < 1, unmount PayPal buttons
+  useEffect(() => {
+    if (!ppMounted) return;
+    if (formReady && subtotal >= 1) return;
+    try {
+      ppButtonsRef.current && ppButtonsRef.current.close && ppButtonsRef.current.close();
+    } catch {}
+    try {
+      if (ppContainerRef.current) ppContainerRef.current.innerHTML = "";
+    } catch {}
+    ppButtonsRef.current = null;
+    setPpMounted(false);
+  }, [formReady, subtotal, ppMounted]);
+
+  const onSubmit = () => {
+    alert("Use the PayPal button to pay.");
+  };
+
   return (
     <Layout>
-      <PageBanner pageName={"Checkout"} />
-      <Accordion defaultActiveKey="collapse3">
+      <PageBanner pageName="Checkout" />
+      <Accordion defaultActiveKey="collapse4">
         <div className="checkout-form-area py-130">
           <div className="container">
             <div className="checkout-faqs" id="checkout-faqs">
               <div className="alert bgc-lighter wow fadeInUp delay-0-2s">
                 <h6>
-                  Returning customer?{" "}
-                  <Accordion.Toggle
-                    as="a"
-                    className="card-header"
-                    eventKey="collapse0"
-                  >
-                    Click here to login
+                  Customer details{" "}
+                  <Accordion.Toggle as="a" className="card-header" eventKey="collapse4">
+                    (required)
                   </Accordion.Toggle>
                 </h6>
-                <Accordion.Collapse eventKey="collapse0" className="content">
-                  <form onSubmit={(e) => e.preventDefault()} action="#">
-                    <p>Please login your accont.</p>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="email"
-                            id="email-address"
-                            name="email-address"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Your Email Address"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Your Password"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="form-footer">
-                      <button type="submit" className="theme-btn style-two">
-                        login <i className="fas fa-angle-double-right" />
-                      </button>
-                      <input
-                        type="checkbox"
-                        name="loss-passowrd"
-                        id="loss-passowrd"
-                        required
-                      />
-                      <label htmlFor="loss-passowrd">Remember me</label>
-                    </div>
-                    <a href="#">Lost your password?</a>
-                  </form>
-                </Accordion.Collapse>
-              </div>
-              <div className="alert bgc-lighter wow fadeInUp delay-0-3s">
-                <h6>
-                  Have a coupon?{" "}
-                  <Accordion.Toggle
-                    as="a"
-                    className="card-header"
-                    eventKey="collapse3"
-                  >
-                    Click here to enter your code
-                  </Accordion.Toggle>
-                </h6>
-                <Accordion.Collapse eventKey="collapse3" className="content">
-                  <form onSubmit={(e) => e.preventDefault()} action="#">
-                    <p>If you have a coupon code, please apply it below.</p>
-                    <div className="form-group">
-                      <input
-                        type="text"
-                        id="coupon-code"
-                        name="coupon-code"
-                        className="form-control"
-                        defaultValue=""
-                        placeholder="Coupon Code"
-                        required
-                      />
-                    </div>
-                    <button type="submit" className="theme-btn style-two">
-                      apply coupon <i className="fas fa-angle-double-right" />
-                    </button>
-                  </form>
-                </Accordion.Collapse>
-              </div>
-              <div className="alert bgc-lighter wow fadeInUp delay-0-4s">
-                <h6>
-                  Billing Address{" "}
-                  <Accordion.Toggle
-                    as="a"
-                    className="card-header"
-                    eventKey="collapse4"
-                  >
-                    {" "}
-                    Enter here
-                  </Accordion.Toggle>
-                </h6>
-                <Accordion.Collapse eventKey="collapse4" className="content">
-                  <form
-                    onSubmit={(e) => e.preventDefault()}
-                    id="checkout-form"
-                    className="checkout-form"
-                    name="checkout-form"
-                    action="#"
-                  >
+
+                <Accordion.Collapse eventKey="collapse4" className="content show">
+                  <form onSubmit={handleSubmit(onSubmit)} className="checkout-form" noValidate>
+                    {/* Contact */}
                     <div className="row">
                       <div className="col-lg-12 pt-15">
-                        <h5>Personal Information</h5>
+                        <h5>Contact information</h5>
                       </div>
+
                       <div className="col-md-6">
                         <div className="form-group">
                           <input
                             type="text"
-                            id="first-name"
-                            name="first-name"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="First Name"
-                            required
+                            placeholder="Full name"
+                            className={`form-control ${errors?.customer?.name ? "is-invalid" : ""}`}
+                            {...register("customer.name", {
+                              required: "Name is required",
+                              minLength: { value: 2, message: "Min 2 characters" },
+                            })}
+                            onBlur={(e) => {
+                              const c = { ...(watch("customer") || {}), name: e.target.value };
+                              persistCustomer(c);
+                            }}
                           />
+                          {errors?.customer?.name && (
+                            <div className="invalid-feedback">{errors.customer.name.message}</div>
+                          )}
                         </div>
                       </div>
+
                       <div className="col-md-6">
                         <div className="form-group">
                           <input
-                            type="text"
-                            id="last-name"
-                            name="last-name"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Last Name"
-                            required
+                            type="tel"
+                            placeholder="Phone"
+                            className={`form-control ${errors?.customer?.phone ? "is-invalid" : ""}`}
+                            {...register("customer.phone", {
+                              required: "Phone is required",
+                              pattern: { value: /^[0-9+\-()\s]{7,20}$/, message: "Invalid phone number" },
+                            })}
+                            onBlur={(e) => {
+                              const c = { ...(watch("customer") || {}), phone: e.target.value };
+                              persistCustomer(c);
+                            }}
                           />
+                          {errors?.customer?.phone && (
+                            <div className="invalid-feedback">{errors.customer.phone.message}</div>
+                          )}
                         </div>
                       </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            id="number"
-                            name="number"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Phone Number"
-                            required
-                          />
-                        </div>
-                      </div>
+
                       <div className="col-md-6">
                         <div className="form-group">
                           <input
                             type="email"
-                            id="emailId"
-                            name="emailId"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Email Address"
-                            required
+                            placeholder="Email address"
+                            className={`form-control ${errors?.customer?.email ? "is-invalid" : ""}`}
+                            {...register("customer.email", {
+                              required: "Email is required",
+                              pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email" },
+                            })}
+                            onBlur={(e) => {
+                              const c = { ...(watch("customer") || {}), email: e.target.value };
+                              persistCustomer(c);
+                            }}
                           />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            id="company-name"
-                            name="company-name"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Company name (optional)"
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            id="company-address"
-                            name="company-address"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Company Address (optional)"
-                          />
-                        </div>
-                      </div>
-                      <div className="col-lg-12">
-                        <h5>Your Address</h5>
-                      </div>
-                      <div className="col-md-6 mb-30">
-                        <div className="form-group">
-                          <select
-                            className="select"
-                            name="country"
-                            id="country"
-                          >
-                            <option value="value1">Select Country</option>
-                            <option value="value2">Australia</option>
-                            <option value="value3">Canada</option>
-                            <option value="value4">China</option>
-                            <option value="value5">Morocco</option>
-                            <option value="value6">Saudi Arabia</option>
-                            <option value="value7">United Kingdom (UK)</option>
-                            <option value="value8">United States (US)</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            id="city"
-                            name="city"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="City"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            id="state"
-                            name="state"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="State"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            id="zip"
-                            name="zip"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Zip"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            id="street-name"
-                            name="street-name"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="House, street name"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="form-group">
-                          <input
-                            type="text"
-                            id="apartment-name"
-                            name="apartment-name"
-                            className="form-control"
-                            defaultValue=""
-                            placeholder="Apartment, suite, unit etc. (optional)"
-                          />
-                        </div>
-                      </div>
-                      <div className="col-lg-12">
-                        <h5>Order Notes (optional)</h5>
-                      </div>
-                      <div className="col-md-12">
-                        <div className="form-group mb-0">
-                          <textarea
-                            name="order-note"
-                            id="order-note"
-                            className="form-control"
-                            rows={5}
-                            placeholder="Notes about your order, e.g. special notes for delivery."
-                            defaultValue={""}
-                          />
+                          {errors?.customer?.email && (
+                            <div className="invalid-feedback">{errors.customer.email.message}</div>
+                          )}
                         </div>
                       </div>
                     </div>
+
+                    {/* Address */}
+                    <div className="row mt-3">
+                      <div className="col-lg-12">
+                        <h5>Full address</h5>
+                      </div>
+                      <div className="col-md-12">
+                        <div className="form-group">
+                          <textarea
+                            rows={3}
+                            placeholder="Street, number, neighborhood, city, state, ZIP"
+                            className={`form-control ${errors?.address ? "is-invalid" : ""}`}
+                            {...register("address", {
+                              required: "Address is required",
+                              minLength: { value: 6, message: "Too short" },
+                            })}
+                            onBlur={(e) => persistAddress(e.target.value || "")}
+                          />
+                          {errors?.address && <div className="invalid-feedback">{errors.address.message}</div>}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notes + Terms */}
+                    <div className="row mt-3">
+                      <div className="col-lg-12">
+                        <h5>Order notes (optional)</h5>
+                      </div>
+                      <div className="col-md-12">
+                        <div className="form-group">
+                          <textarea
+                            rows={4}
+                            className="form-control"
+                            placeholder="Delivery instructions, schedule, references, etc."
+                            {...register("note")}
+                            onBlur={(e) => {
+                              const prev = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+                              persistPrefs({ ...prev, note: e.target.value });
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-md-12">
+                        <label className="d-flex align-items-center gap-2" style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            {...register("terms", { required: true })}
+                            onChange={(e) => {
+                              const prev = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+                              persistPrefs({ ...prev, terms: e.target.checked });
+                            }}
+                          />
+                          I accept the Terms & Conditions
+                        </label>
+                        {errors?.terms && <div className="text-danger mt-1">You must accept the terms.</div>}
+                      </div>
+                    </div>
+
+                    {/* Summary + PayPal */}
+                    <div className="payment-cart-total pt-25">
+                      <div className="row justify-content-between">
+                        <div className="col-lg-6">
+                          <div className="payment-method rmb-30">
+                            <h5 className="mb-20">Pay with PayPal</h5>
+
+                            <div style={{ position: "relative", minHeight: 50 }}>
+                              <div ref={ppContainerRef} id="paypal-buttons" />
+                              {(!sdkReady || !formReady || subtotal < 1) && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    background: "rgba(255,255,255,0.85)",
+                                    borderRadius: 6,
+                                    fontSize: 14,
+                                    textAlign: "center",
+                                    padding: 8,
+                                  }}
+                                >
+                                  {!sdkReady
+                                    ? "Loading PayPal…"
+                                    : subtotal < 1
+                                    ? "Your cart is empty."
+                                    : "Complete your details and accept Terms to continue."}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="col-lg-5">
+                          <div className="shoping-cart-total text-left mb-20">
+                            <h5 className="text-center mb-20">Cart summary</h5>
+                            <table>
+                              <tbody>
+                                {(cart || []).length === 0 && (
+                                  <tr>
+                                    <td colSpan={2}>Your cart is empty.</td>
+                                  </tr>
+                                )}
+                                {(cart || []).map((it) => (
+                                  <tr key={it.id}>
+                                    <td>
+                                      {it.name} <strong>× {it.qty || 1}</strong>
+                                    </td>
+                                    <td>{money(Number(it.price || 0) * (it.qty || 1))}</td>
+                                  </tr>
+                                ))}
+                                <tr>
+                                  <td>
+                                    <strong>Total</strong>
+                                  </td>
+                                  <td>
+                                    <strong>{money(subtotal)}</strong>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Optional submit (we rely on PayPal buttons) */}
+                    {/* <button type="submit" className="theme-btn w-100">Pay</button> */}
                   </form>
                 </Accordion.Collapse>
               </div>
-              <div className="alert bgc-lighter wow fadeInUp delay-0-2s">
-                <h6>
-                  Select Your{" "}
-                  <Accordion.Toggle
-                    as="a"
-                    className="card-header"
-                    eventKey="collapse5"
-                  >
-                    {" "}
-                    Payment Method
-                  </Accordion.Toggle>
-                </h6>
-                <Accordion.Collapse eventKey="collapse5" className="content">
-                  <div className="payment-cart-total pt-25">
-                    <div className="row justify-content-between">
-                      <div className="col-lg-6">
-                        <div className="payment-method rmb-30">
-                          <h5 className="mb-20">Payment Method</h5>
-                          <Accordion
-                            defaultActiveKey="collapseOne"
-                            as="ul"
-                            id="paymentMethod"
-                            className="mb-30"
-                          >
-                            {/* Default unchecked */}
-                            <li className="custom-control custom-radio">
-                              <input
-                                type="radio"
-                                className="custom-control-input"
-                                id="methodone"
-                                name="defaultExampleRadios"
-                                defaultChecked
-                              />{" "}
-                              <Accordion.Toggle
-                                as="label"
-                                className="custom-control-label"
-                                htmlFor="methodone"
-                                data-toggle="collapse"
-                                data-target="#collapseOne"
-                                eventKey="collapseOne"
-                              >
-                                {" "}
-                                Direct Bank Transfer{" "}
-                                <i className="fas fa-money-check" />
-                              </Accordion.Toggle>
-                              <Accordion.Collapse
-                                eventKey="collapseOne"
-                                data-parent="#paymentMethod"
-                                style={{}}
-                              >
-                                <p>
-                                  Make your payment directly into our bank
-                                  account. Please use your Order ID as the
-                                  payment reference. Your order will not be
-                                  shipped our account.
-                                </p>
-                              </Accordion.Collapse>
-                            </li>
-                            {/* Default unchecked */}
-                            <li className="custom-control custom-radio">
-                              <input
-                                type="radio"
-                                className="custom-control-input"
-                                id="methodtwo"
-                                name="defaultExampleRadios"
-                              />{" "}
-                              <Accordion.Toggle
-                                as="label"
-                                className="custom-control-label collapsed"
-                                htmlFor="methodtwo"
-                                data-toggle="collapse"
-                                data-target="#collapseTwo"
-                                eventKey="collapseTwo"
-                              >
-                                {" "}
-                                Cash On Delivery <i className="fas fa-truck" />
-                              </Accordion.Toggle>
-                              <Accordion.Collapse
-                                eventKey="collapseTwo"
-                                data-parent="#paymentMethod"
-                                style={{}}
-                              >
-                                <p>Pay with cash upon delivery.</p>
-                              </Accordion.Collapse>
-                            </li>
-                            {/* Default unchecked */}
-                            <li className="custom-control custom-radio">
-                              <input
-                                type="radio"
-                                className="custom-control-input"
-                                id="methodthree"
-                                name="defaultExampleRadios"
-                              />{" "}
-                              <Accordion.Toggle
-                                as="label"
-                                className="custom-control-label collapsed"
-                                htmlFor="methodthree"
-                                data-toggle="collapse"
-                                data-target="#collapsethree"
-                                eventKey="collapsethree"
-                              >
-                                Paypal <i className="fab fa-cc-paypal" />
-                              </Accordion.Toggle>
-                              <Accordion.Collapse
-                                eventKey="collapsethree"
-                                data-parent="#paymentMethod"
-                                style={{}}
-                              >
-                                <p>
-                                  Pay via PayPal; you can pay with your credit
-                                  card if you don’t have a PayPal account.
-                                </p>
-                              </Accordion.Collapse>
-                            </li>
-                          </Accordion>
-                          <p>
-                            Your personal data will be used to process your
-                            order, support your experience throughout this
-                            website, and for other purposes described in our
-                            privacy policy.
-                          </p>
-                        </div>
-                      </div>
-                      <div className="col-lg-5">
-                        <div className="shoping-cart-total text-left mb-20">
-                          <h5 className="text-center mb-20">Cart Totals</h5>
-                          <table>
-                            <tbody>
-                              <tr>
-                                <td>
-                                  Mobile Apps <strong>× 1</strong>
-                                </td>
-                                <td>$70.00</td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  Business Card <strong>× 2</strong>
-                                </td>
-                                <td>$130.00</td>
-                              </tr>
-                              <tr>
-                                <td>Shipping Fee</td>
-                                <td>$10.00</td>
-                              </tr>
-                              <tr>
-                                <td>Vat</td>
-                                <td>$5.00</td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <strong>Order Total</strong>
-                                </td>
-                                <td>
-                                  <strong>$225.00</strong>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Accordion.Collapse>
-              </div>
-              <button type="button" className="theme-btn w-100">
-                Place order <i className="fas fa-angle-double-right" />
-              </button>
             </div>
           </div>
         </div>
       </Accordion>
+
+      <style jsx global>{`
+        .checkout-form .is-invalid {
+          border-color: #dc3545;
+        }
+        .checkout-form .invalid-feedback {
+          display: block;
+        }
+        #paypal-buttons,
+        [data-funding-source] {
+          min-height: 45px;
+        }
+      `}</style>
     </Layout>
   );
-};
-export default Checkout;
+}
