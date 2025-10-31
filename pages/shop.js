@@ -13,7 +13,7 @@ import {
   getPublicProductDetails,
 } from "../src/services/public/index";
 
-const STORE_ID = 16;
+const STORE_ID = 115;
 const PER_PAGE = 12;
 const CART_KEY = `public_cart_${STORE_ID}`;
 

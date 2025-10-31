@@ -11,7 +11,7 @@ import {
   capturePayPalOrder,
 } from "../src/services/public"; // ajusta la ruta si es necesario
 
-const STORE_ID = 16;
+const STORE_ID = 115;
 const CART_KEY = `public_cart_${STORE_ID}`;
 const CUSTOMER_KEY = `public_checkout_customer_${STORE_ID}`;
 const ADDRESS_KEY = `public_checkout_address_${STORE_ID}`;
