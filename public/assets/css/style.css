@@ -9047,50 +9047,79 @@ blockquote {
           letter-spacing: .5px;
         }
 
-        .pqv-info {
-          padding: 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          overflow: auto;          /* ⬅️ scroll interno si hace falta */
-        }
-        .pqv-close {
-          border: none; background: transparent; font-size: 20px; line-height: 1;
-        }
+        /* === Quick View: header y footer pegajosos + scroll correcto === */
 
-        .pqv-qty-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-top: 8px;
-          flex-wrap: wrap;
-        }
-        .pqv-btn-minor {
-          border: 1px solid #ddd;
-          width: 32px; height: 32px;
-          border-radius: 8px;
-          background: #fafafa;
-        }
-        .qty-box {
-          width: 120px;
-          height: 36px;
-          text-align: center;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          background: #fff;
-          font-weight: 700;
-          font-size: 16px;
-          line-height: 36px;
-          color: #111 !important;
-          -webkit-text-fill-color: #111 !important;
-          text-indent: 0 !important;
-          caret-color: #111 !important;
-          /* -moz-appearance: textfield; */
-        }
-        .qty-box::-webkit-outer-spin-button,
-        .qty-box::-webkit-inner-spin-button {
-          -webkit-appearance: none; margin: 0;
-        }
+/* Asegura que el modal contenedor limite altura y no “trague” el sticky */
+[role="dialog"] > div {
+  max-height: 95vh !important;
+  overflow: hidden; /* el scroll NO va aquí, va en .pqv-info */
+}
+
+/* La columna derecha: scroll principal aquí */
+.pqv-info {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;          /* clave para que el flex pueda encoger */
+  overflow-y: auto;       /* ⬅️ aquí vive el scroll */
+  overscroll-behavior: contain;
+}
+
+/* Header fijo arriba (título + cerrar) */
+.pqv-info-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+/* Cuerpo: ya no scrollea; deja crecer y respira abajo */
+.pqv-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;      /* ⬅️ importante */
+  display: grid;
+  gap: 10px;
+  padding-bottom: 16px;   /* evita que el texto se esconda detrás del footer */
+}
+
+/* Footer con qty + CTAs “pegado” al fondo visible */
+.pqv-footer {
+  position: sticky;
+  bottom: 0;              /* ⬅️ se pega dentro del scroll de .pqv-info */
+  z-index: 3;
+  background: #fff;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  padding-bottom: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+/* Evita “temblor” por bordes redondeados en algunos navegadores */
+.pqv-footer::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: transparent;
+}
+
+/* (Opcional) Sombra suave al footer para separarlo del contenido */
+.pqv-footer {
+  box-shadow: 0 -6px 12px rgba(0,0,0,.04);
+}
+
+/* Mantén tus estilos previos… solo pequeños ajustes de inputs */
+.qty-box {
+  -moz-appearance: textfield;
+}
+.qty-box::-webkit-outer-spin-button,
+.qty-box::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
         .pqv-cta {
           display: grid;
@@ -9130,6 +9159,6 @@ blockquote {
 /* burbuja del carrito */
 .fab-cart {
   bottom: var(--fab-bottom) !important;
-  right: 16px !important;
+  right: 6px !important;
 }
 
