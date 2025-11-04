@@ -101,8 +101,8 @@ export default function ProductQuickViewModal({
     Array.isArray(product?.category) && product?.category.length
       ? product?.category
       : Array.isArray(product?.categories)
-      ? product?.categories.map((c) => c?.name).filter(Boolean)
-      : [];
+        ? product?.categories.map((c) => c?.name).filter(Boolean)
+        : [];
 
   const descShort = product?.shortDescription ?? product?.description ?? "";
   const descLong = product?.fullDescription ?? product?.longDescription ?? "";
@@ -139,138 +139,138 @@ export default function ProductQuickViewModal({
             }}
           >
             {/* LEFT: media */}
-{/* LEFT: media (desktop: la imagen ocupa todo el alto disponible) */}
-<Box
-  sx={{
-    p: 2,
-    bgcolor: "grey.50",
-    display: "grid",
-    gridTemplateRows: { xs: "auto auto", md: "1fr auto" }, // ← imagen llena, thumbs abajo
-    gap: 1.5,
-    height: "100%",
-    minHeight: 0,
-    overflow: "hidden",
-  }}
->
-  <Box sx={{ position: "relative" }}>
-    {product?.new && (
-      <Chip
-        label="NEW"
-        size="small"
-        sx={{
-          position: "absolute",
-          top: 12,
-          left: 12,
-          bgcolor: "grey.900",
-          color: "#fff",
-          fontWeight: 700,
-          zIndex: 2,
-        }}
-      />
-    )}
-    {hasDiscount && (
-      <Chip
-        label={`-${discountPct}%`}
-        size="small"
-        color="error"
-        sx={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}
-      />
-    )}
+            {/* LEFT: media (desktop: la imagen ocupa todo el alto disponible) */}
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: "grey.50",
+                display: "grid",
+                gridTemplateRows: { xs: "auto auto", md: "1fr auto" }, // ← imagen llena, thumbs abajo
+                gap: 1.5,
+                height: "100%",
+                minHeight: 0,
+                overflow: "hidden",
+              }}
+            >
+              <Box sx={{ position: "relative" }}>
+                {product?.new && (
+                  <Chip
+                    label="NEW"
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: 12,
+                      left: 12,
+                      bgcolor: "grey.900",
+                      color: "#fff",
+                      fontWeight: 700,
+                      zIndex: 2,
+                    }}
+                  />
+                )}
+                {hasDiscount && (
+                  <Chip
+                    label={`-${discountPct}%`}
+                    size="small"
+                    color="error"
+                    sx={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}
+                  />
+                )}
 
-    {/* Contenedor principal de la imagen: ahora llena el 1fr */}
-    <Box
-      sx={{
-        position: "relative",
-        borderRadius: 2,
-        border: "1px solid",
-        borderColor: "divider",
-        bgcolor: "#fff",
-        overflow: "hidden",
-        height: { xs: 300, md: "100%" },        // ← llena la fila 1fr
-        minHeight: 0,
-      }}
-    >
-      <Box
-        component="img"
-        src={images[activeIndex]}
-        alt={product?.name || "Product"}
-        loading="lazy"
-        sx={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",                     // ← usa "cover" para ocupar todo el espacio
-          // si NO quieres recorte, cambia a: objectFit: "contain"
-        }}
-      />
+                {/* Contenedor principal de la imagen: ahora llena el 1fr */}
+                <Box
+                  sx={{
+                    position: "relative",
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "#fff",
+                    overflow: "hidden",
+                    height: { xs: 300, md: "100%" },        // ← llena la fila 1fr
+                    minHeight: 0,
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={images[activeIndex]}
+                    alt={product?.name || "Product"}
+                    loading="lazy"
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",                     // ← usa "cover" para ocupar todo el espacio
+                      // si NO quieres recorte, cambia a: objectFit: "contain"
+                    }}
+                  />
 
-      {images.length > 1 && (
-        <>
-          <IconButton
-            size="small"
-            onClick={() =>
-              setActiveIndex((i) => (i - 1 + images.length) % images.length)
-            }
-            sx={{
-              position: "absolute",
-              left: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              bgcolor: "rgba(255,255,255,.9)",
-            }}
-          >
-            <ArrowBackIosNewIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => setActiveIndex((i) => (i + 1) % images.length)}
-            sx={{
-              position: "absolute",
-              right: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              bgcolor: "rgba(255,255,255,.9)",
-            }}
-          >
-            <ArrowForwardIosIcon fontSize="small" />
-          </IconButton>
-        </>
-      )}
-    </Box>
-  </Box>
+                  {images.length > 1 && (
+                    <>
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setActiveIndex((i) => (i - 1 + images.length) % images.length)
+                        }
+                        sx={{
+                          position: "absolute",
+                          left: 8,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          bgcolor: "rgba(255,255,255,.9)",
+                        }}
+                      >
+                        <ArrowBackIosNewIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => setActiveIndex((i) => (i + 1) % images.length)}
+                        sx={{
+                          position: "absolute",
+                          right: 8,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          bgcolor: "rgba(255,255,255,.9)",
+                        }}
+                      >
+                        <ArrowForwardIosIcon fontSize="small" />
+                      </IconButton>
+                    </>
+                  )}
+                </Box>
+              </Box>
 
-  {/* Thumbs en la fila auto (no afectan el alto de la imagen) */}
-  {images.length > 1 && (
-    <Box
-      sx={{
-        display: "flex",
-        gap: 1,
-        overflowX: "auto",
-        pb: 0.5,
-        "&::-webkit-scrollbar": { height: 6 },
-        "&::-webkit-scrollbar-thumb": { bgcolor: "divider", borderRadius: 999 },
-      }}
-    >
-      {images.map((src, i) => (
-        <IconButton
-          key={`${src}-${i}`}
-          onClick={() => setActiveIndex(i)}
-          sx={{
-            p: 0,
-            borderRadius: 1.5,
-            width: 64,
-            height: 64,
-            border: "2px solid",
-            borderColor: i === activeIndex ? "error.main" : "transparent",
-            overflow: "hidden",
-            flex: "0 0 auto",
-          }}
-        >
-          <Box component="img" src={src} alt="" sx={{ width: 1, height: 1, objectFit: "cover" }} />
-        </IconButton>
-      ))}
-    </Box>
-  )}
-</Box>
+              {/* Thumbs en la fila auto (no afectan el alto de la imagen) */}
+              {images.length > 1 && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    overflowX: "auto",
+                    pb: 0.5,
+                    "&::-webkit-scrollbar": { height: 6 },
+                    "&::-webkit-scrollbar-thumb": { bgcolor: "divider", borderRadius: 999 },
+                  }}
+                >
+                  {images.map((src, i) => (
+                    <IconButton
+                      key={`${src}-${i}`}
+                      onClick={() => setActiveIndex(i)}
+                      sx={{
+                        p: 0,
+                        borderRadius: 1.5,
+                        width: 64,
+                        height: 64,
+                        border: "2px solid",
+                        borderColor: i === activeIndex ? "error.main" : "transparent",
+                        overflow: "hidden",
+                        flex: "0 0 auto",
+                      }}
+                    >
+                      <Box component="img" src={src} alt="" sx={{ width: 1, height: 1, objectFit: "cover" }} />
+                    </IconButton>
+                  ))}
+                </Box>
+              )}
+            </Box>
 
 
             {/* RIGHT: info (body con scroll + footer sticky) */}
@@ -445,10 +445,20 @@ export default function ProductQuickViewModal({
                       variant="contained"
                       startIcon={<PaymentIcon />}
                       onClick={() => onPayNow(product, qty)}
-                      sx={{ height: 44, borderRadius: 2, fontWeight: 800 }}
+                      sx={{
+                        height: 44,
+                        borderRadius: 2,
+                        fontWeight: 800,
+                        backgroundColor: "#f34520",
+                        color: "#fff", // color del texto
+                        "&:hover": {
+                          backgroundColor: "#d43c1c", // un poco más oscuro para hover
+                        },
+                      }}
                     >
                       Pay now
                     </Button>
+
                   </Stack>
                 </Stack>
               </Box>

@@ -57,41 +57,104 @@ function ToastViewport({ toasts, remove }) {
   );
 }
 
+// helper para detectar móvil
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 function ConfirmModal({ open, options, onResolve }) {
   if (typeof window === "undefined") return null;
+  const isMobile = useIsMobile();
   const style = TYPE_STYLE.info;
+
   return createPortal(
     open ? (
-      <div aria-modal="true" role="dialog" style={{
-        position: "fixed", inset: 0, background: "rgba(0,0,0,.45)",
-        display: "grid", placeItems: "center", zIndex: 10000
-      }}>
-        <div style={{
-          background: "#fff", color: FP.black, borderRadius: 18, maxWidth: 520, width: "92%",
-          boxShadow: "0 18px 60px rgba(0,0,0,.35)", border: `3px solid ${FP.yellow}`, padding: 18
-        }}>
-          <div style={{ fontWeight: 900, fontSize: 20, marginBottom: 8 }}>
+      <div
+        aria-modal="true"
+        role="dialog"
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,.45)",
+          display: "flex",                // << flex (no grid) para evitar estirar el hijo
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10000,
+          padding: isMobile ? 16 : 0,     // respiración en móvil
+        }}
+      >
+        <div
+          style={{
+            background: "#fff",
+            color: FP.black,
+            borderRadius: 16,
+            // Tamaño compacto:
+            width: isMobile ? "min(92vw, 420px)" : "min(520px, 90vw)",
+            height: "auto",
+            maxHeight: "calc(100dvh - 120px)", // tope para no crecer de más
+            overflow: "auto",
+            boxShadow: "0 18px 60px rgba(0,0,0,.35)",
+            border: `3px solid ${FP.yellow}`,
+            padding: isMobile ? 16 : 18,
+          }}
+        >
+          <div style={{ fontWeight: 900, fontSize: isMobile ? 18 : 20, marginBottom: 10 }}>
             {options.title ?? "¿Confirmar?"}
           </div>
+
           {options.text && (
-            <div style={{ marginBottom: 14, lineHeight: 1.35 }}>{options.text}</div>
+            <div style={{ marginBottom: 16, lineHeight: 1.35, fontSize: isMobile ? 14 : 15 }}>
+              {options.text}
+            </div>
           )}
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              justifyContent: isMobile ? "stretch" : "flex-end",
+              flexDirection: isMobile ? "column" : "row", // botones apilados en móvil
+            }}
+          >
             <button
               onClick={() => onResolve(false)}
               style={{
-                background: FP.red, color: "#fff", border: 0, padding: "10px 14px",
-                borderRadius: 999, fontWeight: 800, boxShadow: "0 8px 24px rgba(239,68,35,.35)"
+                background: FP.red,
+                color: "#fff",
+                border: 0,
+                padding: "12px 16px",
+                borderRadius: 999,
+                fontWeight: 800,
+                boxShadow: "0 8px 24px rgba(239,68,35,.35)",
+                width: isMobile ? "100%" : "auto",
+                fontSize: isMobile ? 14 : 15,
               }}
             >
               {options.cancelText ?? "Cancelar"}
             </button>
+
             <button
               autoFocus
               onClick={() => onResolve(true)}
               style={{
-                background: style.bg, color: style.fg, border: 0, padding: "10px 14px",
-                borderRadius: 999, fontWeight: 800, boxShadow: "0 8px 24px rgba(17,203,215,.35)"
+                background: style.bg,
+                color: style.fg,
+                border: 0,
+                padding: "12px 16px",
+                borderRadius: 999,
+                fontWeight: 800,
+                boxShadow: "0 8px 24px rgba(17,203,215,.35)",
+                width: isMobile ? "0%" : "auto",
+                fontSize: isMobile ? 14 : 15,
               }}
             >
               {options.confirmText ?? "Sí, continuar"}
@@ -103,6 +166,7 @@ function ConfirmModal({ open, options, onResolve }) {
     document.body
   );
 }
+
 
 let idSeq = 0;
 

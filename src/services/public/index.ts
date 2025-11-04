@@ -1,5 +1,12 @@
 import axiosClientPublic from "../../config/axiosClientPublic";
 
+/* ========= Globals ========= */
+declare global {
+  interface Window {
+    paypal?: any;
+  }
+}
+
 /* ========= Tipos ========= */
 export type PublicCategory = {
   id: number | string;
@@ -18,14 +25,10 @@ export type PublicProduct = {
   saleCount?: number | null;
 
   // BACKEND puede mandar cualquiera de estas combinaciones:
-  // - image: string[]
-  // - images: string[]
-  image?: string[];     // ← usaremos SIEMPRE esta en el UI tras normalizar
+  image?: string[]; // ← usaremos SIEMPRE esta en el UI tras normalizar
   images?: string[];
 
-  // - category: string[]
-  // - categories: { id: number|string, name: string }[]
-  category?: string[];  // ← usaremos SIEMPRE esta en el UI tras normalizar
+  category?: string[]; // ← usaremos SIEMPRE esta en el UI tras normalizar
   categories?: { id: number | string; name: string }[];
 
   shortDescription?: string | null;
@@ -38,6 +41,65 @@ export type PublicProduct = {
 
   // Para no romper si llegan más props
   [k: string]: any;
+};
+
+export type PayPalMode = "sandbox" | "live";
+
+export type PayPalSdkCreds = {
+  ok: boolean;
+  mode: PayPalMode;
+  client_id: string;
+  currency: string; // ej. "MXN" o "USD"
+  brand: string;
+};
+
+/** Ítems que enviamos a PayPal y aprovechamos para pasar IDs del producto al backend */
+export type PayPalLineItem = {
+  name: string;
+  quantity: string; // "1", "2", ...
+  unit_amount: { value: number; currency_code: string };
+  // Extras para que el backend reconstruya la venta:
+  product_id?: number;
+  variation_size_id?: number | null;
+  unit_price?: number; // redundante a unit_amount.value, pero útil para tu POS
+};
+
+/** Datos de cliente que se guardarán en la pivote paypal_sales */
+export type PayPalCustomer = {
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  address?: any; // { street, ext, int, neighborhood, city, state, zip, country }
+  order_note?: string;
+  terms_accepted?: boolean;
+  [k: string]: any;
+};
+
+export type CreatePayPalOrderPayload = {
+  amount: number;
+  currency?: string;
+  reference_id?: string;
+  items?: PayPalLineItem[];
+  customer?: PayPalCustomer;
+  shipping_preference?: "NO_SHIPPING" | "GET_FROM_FILE" | "SET_PROVIDED_ADDRESS";
+  return_url?: string;
+  cancel_url?: string;
+};
+
+export type CreatePayPalOrderResp = {
+  ok: boolean;
+  order_id: string;
+  status: string;
+  approval_url?: string;
+};
+
+export type CapturePayPalResp = {
+  ok: boolean;
+  capture?: any;
+  sale?: any;
+  paypal_sale?: any;
+  status?: string;
+  message?: string;
 };
 
 /* ========= Helpers ========= */
@@ -58,9 +120,9 @@ export function normalizeProduct(raw: PublicProduct = {} as PublicProduct): Publ
   const categoryArr: string[] = Array.isArray(raw.category)
     ? raw.category
     : Array.isArray(raw.categories)
-    ? raw.categories
+    ? (raw.categories
         .map((c) => (typeof c === "string" ? c : c?.name))
-        .filter(Boolean) as string[]
+        .filter(Boolean) as string[])
     : [];
 
   const shortDesc =
@@ -76,31 +138,28 @@ export function normalizeProduct(raw: PublicProduct = {} as PublicProduct): Publ
 
   return {
     ...raw,
-    image: imageArr,             // ← UI siempre puede leer p.image[0]
-    category: categoryArr,       // ← UI siempre puede filtrar por nombre
+    image: imageArr,       // ← UI siempre puede leer p.image[0]
+    category: categoryArr, // ← UI siempre puede filtrar por nombre
     shortDescription: shortDesc,
-    description: fullDesc,       // ← fallback unificado
+    description: fullDesc, // ← fallback unificado
     price: toNumber(raw.price, 0),
     discount: toNumber(raw.discount, 0),
   };
 }
 
-/* ========= Endpoints ========= */
+/* ========= Endpoints públicos ========= */
 
-/** Categorías públicas por tienda (ID) */
 export async function getPublicCategories(storeId: number | string): Promise<PublicCategory[]> {
   const { data } = await axiosClientPublic.get(`/public/stores/${storeId}/categories`);
   return (data?.categories ?? []) as PublicCategory[];
 }
 
-/** Productos públicos por tienda (ID) (normalizados) */
 export async function getPublicProducts(storeId: number | string): Promise<PublicProduct[]> {
   const { data } = await axiosClientPublic.get(`/public/stores/${storeId}/products`);
   const arr = Array.isArray(data) ? data : (data?.products ?? []);
   return (arr as PublicProduct[]).map(normalizeProduct);
 }
 
-/** Detalle público por tienda/producto (normalizado) */
 export async function getPublicProductDetails(
   storeId: number | string,
   productId: number | string
@@ -111,42 +170,31 @@ export async function getPublicProductDetails(
 }
 
 /* ========= PayPal público (BYO) ========= */
-export type PayPalSdkCreds = {
-  ok: boolean;
-  mode: "sandbox" | "live";
-  client_id: string;
-  currency: string;   // ej. "MXN" o "USD"
-  brand: string;
-};
 
 export async function getPayPalSdkCredentials(storeId: number | string): Promise<PayPalSdkCreds> {
   const { data } = await axiosClientPublic.get(`/public/paypal/${storeId}/sdk-credentials`);
   return data as PayPalSdkCreds;
 }
 
+/**
+ * Crea una orden en tu backend (que a su vez llama PayPal)
+ * payload.items permite llevar product_id/variation_size_id para que tu backend cree la venta.
+ */
 export async function createPayPalOrder(
   storeId: number | string,
-  payload: {
-    amount: number;
-    currency?: string; // p.ej. "USD" para cobrar en dólares
-    reference_id?: string;
-    items?: Array<{ name: string; quantity: string; unit_amount: { value: number; currency_code: string } }>;
-    customer?: any;
-    shipping_preference?: "NO_SHIPPING" | "GET_FROM_FILE" | "SET_PROVIDED_ADDRESS";
-    return_url?: string;
-    cancel_url?: string;
-  }
-): Promise<{ ok: boolean; order_id: string; status: string; approval_url?: string }> {
+  payload: CreatePayPalOrderPayload
+): Promise<CreatePayPalOrderResp> {
   const { data } = await axiosClientPublic.post(`/public/paypal/${storeId}/order`, payload);
-  return data;
+  return data as CreatePayPalOrderResp;
 }
 
+/** Captura la orden (tu backend hace la captura PayPal y registra la venta en tu POS) */
 export async function capturePayPalOrder(
   storeId: number | string,
   orderId: string
-): Promise<{ ok: boolean; capture: any }> {
+): Promise<CapturePayPalResp> {
   const { data } = await axiosClientPublic.post(`/public/paypal/${storeId}/capture`, { order_id: orderId });
-  return data;
+  return data as CapturePayPalResp;
 }
 
 /** ======= Loader PayPal (recarga si cambia clientId/currency) ======= */
@@ -154,12 +202,10 @@ let paypalSdkPromise: Promise<void> | null = null;
 let _loadedClientId: string | null = null;
 let _loadedCurrency: string | null = null;
 
-function unloadPayPalSdk() {
+function unloadPayPalSdk(): void {
   const scripts = Array.from(document.querySelectorAll('script[src*="paypal.com/sdk/js"]'));
   scripts.forEach((s) => s.parentElement?.removeChild(s));
-  // @ts-ignore
-  if (window.paypal) {
-    // @ts-ignore
+  if (typeof window !== "undefined" && window.paypal) {
     delete window.paypal;
   }
   paypalSdkPromise = null;
@@ -167,7 +213,11 @@ function unloadPayPalSdk() {
   _loadedCurrency = null;
 }
 
-export function loadPayPalSdk({ clientId, currency }: { clientId: string; currency: string }) {
+/**
+ * Carga el SDK con el clientId y la currency dados.
+ * Nota: el entorno (sandbox/live) lo determina el clientId, no un parámetro extra.
+ */
+export function loadPayPalSdk({ clientId, currency }: { clientId: string; currency: string }): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
 
   const needReload =
@@ -175,7 +225,6 @@ export function loadPayPalSdk({ clientId, currency }: { clientId: string; curren
     !_loadedCurrency ||
     _loadedClientId !== clientId ||
     _loadedCurrency !== currency ||
-    // @ts-ignore
     !window.paypal;
 
   if (!needReload && paypalSdkPromise) return paypalSdkPromise;
@@ -202,37 +251,41 @@ export function loadPayPalSdk({ clientId, currency }: { clientId: string; curren
   return paypalSdkPromise;
 }
 
-/* ========= Helpers para NÓMINAS (USD listo) ========= */
 /**
- * Crea una orden de PayPal en USD para nómina, con concepto descriptivo.
- * - amount: número en USD (2 decimales)
- * - memo: texto para identificar el pago (aparece en el item.name)
+ * Helper de conveniencia:
+ * - Pide las credenciales al backend (que ya sabe si es sandbox o live)
+ * - Carga el SDK con esas credenciales
+ * - Permite forzar moneda distinta (p.ej. USD), si lo deseas
  */
-export async function createNominaOrderUSD(
+export async function ensurePayPalSdkForStore(
+  storeId: number | string,
+  opts: { forceCurrency?: string } = {}
+): Promise<{ clientId: string; currency: string; mode: PayPalMode; brand?: string }> {
+  const creds = await getPayPalSdkCredentials(storeId);
+  // Si quieres forzar otra moneda en el front (ej. USD), úsala aquí:
+  const currency = (opts.forceCurrency || creds.currency || "MXN").toUpperCase();
+  await loadPayPalSdk({ clientId: creds.client_id, currency });
+  return { clientId: creds.client_id, currency, mode: creds.mode, brand: creds.brand };
+}
+
+/* ========= Helper de ejemplo (opcional) ========= */
+export async function createSingleItemOrderUSD(
   storeId: number | string,
   amount: number,
   memo: string
-) {
+): Promise<CreatePayPalOrderResp> {
   const currency = "USD";
   return createPayPalOrder(storeId, {
     amount,
     currency,
-    reference_id: `NOM-${Date.now()}`,
+    reference_id: `ORD-${Date.now()}`,
     items: [
       {
-        name: memo || "Pago de nómina",
+        name: memo || "Orden",
         quantity: "1",
         unit_amount: { value: Number(amount.toFixed(2)), currency_code: currency },
       },
     ],
     shipping_preference: "NO_SHIPPING",
   });
-}
-
-/**
- * Inicializa el SDK de PayPal para nómina en USD (pásale el client_id LIVE que uses para nóminas).
- * Si prefieres obtenerlo del backend por store, usa getPayPalSdkCredentials y toma client_id.
- */
-export async function initNominaPayPalUSD(clientId: string) {
-  await loadPayPalSdk({ clientId, currency: "USD" });
 }
