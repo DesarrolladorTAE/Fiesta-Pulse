@@ -20,6 +20,13 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import PaymentIcon from "@mui/icons-material/Payment";
 
+/* ===== GA helper ===== */
+function trackEvent(name, params = {}) {
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("event", name, params);
+  }
+}
+
 /* ===== helpers ===== */
 function money(n) {
   return `$${Number(n || 0).toFixed(2)}`;
@@ -80,6 +87,17 @@ export default function ProductQuickViewModal({
   const [activeIndex, setActiveIndex] = useState(0);
   const fullScreen = useMediaQuery("(max-width:900px)");
 
+  // GA: cuando se abre el modal, registramos el producto visto
+  useEffect(() => {
+    if (open && product) {
+      trackEvent("shop_quick_view_open", {
+        product_id: product.id,
+        product_name: product.name,
+        price: Number(product.price || 0),
+      });
+    }
+  }, [open, product]);
+
   // reset al abrir
   useEffect(() => {
     if (open) {
@@ -101,12 +119,39 @@ export default function ProductQuickViewModal({
     Array.isArray(product?.category) && product?.category.length
       ? product?.category
       : Array.isArray(product?.categories)
-        ? product?.categories.map((c) => c?.name).filter(Boolean)
-        : [];
+      ? product?.categories.map((c) => c?.name).filter(Boolean)
+      : [];
 
   const descShort = product?.shortDescription ?? product?.description ?? "";
   const descLong = product?.fullDescription ?? product?.longDescription ?? "";
   const rating = Number(product?.rating) || 0;
+
+  // handlers envueltos con GA
+  const handleAddToCart = () => {
+    if (!product) return;
+    trackEvent("shop_quick_view_add_to_cart", {
+      product_id: product.id,
+      product_name: product.name,
+      quantity: qty,
+      price_base: price,
+      price_final: final,
+      discount_pct: discountPct,
+    });
+    onAddToCart && onAddToCart(product, qty);
+  };
+
+  const handlePayNow = () => {
+    if (!product) return;
+    trackEvent("shop_quick_view_pay_now", {
+      product_id: product.id,
+      product_name: product.name,
+      quantity: qty,
+      price_base: price,
+      price_final: final,
+      discount_pct: discountPct,
+    });
+    onPayNow && onPayNow(product, qty);
+  };
 
   return (
     <Dialog
@@ -135,17 +180,16 @@ export default function ProductQuickViewModal({
               gridTemplateColumns: { xs: "1fr", md: "1fr 1.2fr" },
               gap: 0,
               height: "100%",
-              minHeight: 0, // permite que la columna derecha haga overflow
+              minHeight: 0,
             }}
           >
             {/* LEFT: media */}
-            {/* LEFT: media (desktop: la imagen ocupa todo el alto disponible) */}
             <Box
               sx={{
                 p: 2,
                 bgcolor: "grey.50",
                 display: "grid",
-                gridTemplateRows: { xs: "auto auto", md: "1fr auto" }, // ← imagen llena, thumbs abajo
+                gridTemplateRows: { xs: "auto auto", md: "1fr auto" },
                 gap: 1.5,
                 height: "100%",
                 minHeight: 0,
@@ -177,7 +221,6 @@ export default function ProductQuickViewModal({
                   />
                 )}
 
-                {/* Contenedor principal de la imagen: ahora llena el 1fr */}
                 <Box
                   sx={{
                     position: "relative",
@@ -186,7 +229,7 @@ export default function ProductQuickViewModal({
                     borderColor: "divider",
                     bgcolor: "#fff",
                     overflow: "hidden",
-                    height: { xs: 300, md: "100%" },        // ← llena la fila 1fr
+                    height: { xs: 300, md: "100%" },
                     minHeight: 0,
                   }}
                 >
@@ -198,8 +241,7 @@ export default function ProductQuickViewModal({
                     sx={{
                       width: "100%",
                       height: "100%",
-                      objectFit: "cover",                     // ← usa "cover" para ocupar todo el espacio
-                      // si NO quieres recorte, cambia a: objectFit: "contain"
+                      objectFit: "cover",
                     }}
                   />
 
@@ -238,7 +280,6 @@ export default function ProductQuickViewModal({
                 </Box>
               </Box>
 
-              {/* Thumbs en la fila auto (no afectan el alto de la imagen) */}
               {images.length > 1 && (
                 <Box
                   sx={{
@@ -272,8 +313,7 @@ export default function ProductQuickViewModal({
               )}
             </Box>
 
-
-            {/* RIGHT: info (body con scroll + footer sticky) */}
+            {/* RIGHT: info */}
             <Box
               sx={{
                 display: "flex",
@@ -308,7 +348,7 @@ export default function ProductQuickViewModal({
                 </IconButton>
               </Box>
 
-              {/* Body: el único que scrollea */}
+              {/* Body scrolleable */}
               <Stack
                 spacing={1.25}
                 sx={{
@@ -435,7 +475,7 @@ export default function ProductQuickViewModal({
                       fullWidth
                       variant="outlined"
                       startIcon={<ShoppingCartIcon />}
-                      onClick={() => onAddToCart(product, qty)}
+                      onClick={handleAddToCart}
                       sx={{ height: 44, borderRadius: 2, fontWeight: 700, bgcolor: "grey.100" }}
                     >
                       Add to cart
@@ -444,21 +484,20 @@ export default function ProductQuickViewModal({
                       fullWidth
                       variant="contained"
                       startIcon={<PaymentIcon />}
-                      onClick={() => onPayNow(product, qty)}
+                      onClick={handlePayNow}
                       sx={{
                         height: 44,
                         borderRadius: 2,
                         fontWeight: 800,
                         backgroundColor: "#f34520",
-                        color: "#fff", // color del texto
+                        color: "#fff",
                         "&:hover": {
-                          backgroundColor: "#d43c1c", // un poco más oscuro para hover
+                          backgroundColor: "#d43c1c",
                         },
                       }}
                     >
                       Pay now
                     </Button>
-
                   </Stack>
                 </Stack>
               </Box>

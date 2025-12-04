@@ -4,6 +4,7 @@ import Preloader from "@/src/layout/Preloader";
 import "@/styles/globals.css";
 import { Fragment, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/router"; // 👈 NUEVO
 
 // 🔒 Evita SSR del AlertProvider (y de su ToastViewport/portales)
 const AlertProvider = dynamic(
@@ -16,11 +17,28 @@ const AlertProvider = dynamic(
 
 export default function App({ Component, pageProps }) {
   const [loading, setLoading] = useState(true);
+  const router = useRouter(); // 👈 NUEVO
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  // 👇 ESTE useEffect es el que avisa a GA4 de cada cambio de página
+  useEffect(() => {
+    const handleRouteChange = (url) => {
+      if (typeof window !== "undefined" && typeof window.gtag === "function") {
+        window.gtag("config", "G-S7P1H9V625", {
+          page_path: url,
+        });
+      }
+    };
+
+    router.events.on("routeChangeComplete", handleRouteChange);
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [router.events]);
 
   return (
     <Fragment>

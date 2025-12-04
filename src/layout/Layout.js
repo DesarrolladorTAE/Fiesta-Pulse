@@ -16,12 +16,16 @@ const Layout = ({ children, header }) => {
       <ImageView />
       <div className="page-wrapper">
         {/* Preloader */}
+        {/*Solo son puros componentes que no sirven en la vista >*/}
         {/* <Preloader /> */}
+
         <Header header={header} />
         {children}
         {/* footer area start */}
         <Footer />
         {/* footer area end */}
+
+        {/* Layout Principal de la Vista */}
         {/* Scroll Top Button */}
         <ScrollTopButton />
       </div>
