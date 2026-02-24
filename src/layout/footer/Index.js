@@ -40,7 +40,7 @@ const Footer = () => {
         <div className="fp-logo">
           <Link legacyBehavior href="/">
             <a aria-label="Fiesta Pulse Home">
-              <img src="assets/images/logos/logo-one.png" alt="Fiesta Pulse Logo" />
+              <img src="assets/images/logos/lol1.png" alt="Fiesta Pulse Logo" />
             </a>
           </Link>
         </div>

@@ -12,12 +12,12 @@ const JeenaHead = () => {
       />
       {/* Title */}
       <title>
-        Fiesta Pulse
+        Lavandería Premium
       </title>
       {/* Favicon Icon */}
       <link
         rel="shortcut icon"
-        href="assets/images/logos/logo-one.png"
+        href="assets/images/logos/lol.png"
         type="image/x-icon"
       />
       {/* Google Fonts */}

@@ -50,7 +50,7 @@ const Header1 = () => {
                 <Link legacyBehavior href="/">
                   <a>
                     <img
-                      src="assets/images/logos/logo-one.png"
+                      src="assets/images/logos/lol1.png"
                       alt="Logo"
                       title="Logo"
                     />

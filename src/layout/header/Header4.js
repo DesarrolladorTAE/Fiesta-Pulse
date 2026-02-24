@@ -16,7 +16,7 @@ const DefaultHeader = () => {
                 <Link legacyBehavior href="/">
                   <a>
                     <img
-                      src="assets/images/logos/logo-one.png"
+                      src="assets/images/logos/lol2.png"
                       alt="Logo"
                       title="Logo"
                     />
@@ -26,18 +26,18 @@ const DefaultHeader = () => {
             </div>
 
             <div className="nav-outer mx-auto clearfix">
-              {/* Main Menu */}
+
               <Menu />
-              {/* Main Menu End*/}
+
             </div>
-            {/* Nav Search */}
+            {/* Nav Search
             <div className="nav-search ms-xl-auto py-10">
               <Search />
-            </div>
+            </div> */}
             {/* Menu Button */}
 
             {/* Header Social */}
-            <div className="social-style-two">
+            {/* <div className="social-style-two">
               <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
                 <i className="fab fa-facebook-f" />
               </a>
@@ -48,7 +48,7 @@ const DefaultHeader = () => {
               <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
                 <i className="fab fa-tiktok" />
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

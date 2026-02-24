@@ -1,8 +1,8 @@
 // src/theme/palette.js
 export const FP = {
-  cyan:   "#11CBD7", // éxito / primario
-  red:    "#EF4423", // error
-  black:  "#111111", // texto
-  yellow: "#F2B30F", // acento/borde
-  orange: "#F18805", // secundario
+  cyan:   "#1E3A8A", // azul medio del logo (primario)
+  red:    "#0F2A4A", // azul marino oscuro (principal)
+  black:  "#0B1E35", // azul profundo para texto
+  yellow: "#8A95A3", // gris azulado medio (acento)
+  orange: "#CFD6DF", // gris claro (fondos / secundario)
 };

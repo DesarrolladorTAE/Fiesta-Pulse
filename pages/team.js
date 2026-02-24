@@ -287,7 +287,7 @@ const Team = () => {
                   <Link legacyBehavior href="/">
                     <a>
                       <img
-                        src="assets/images/logos/logo-one2.png"
+                        src="assets/images/logos/lol2.png"
                         alt="Logo"
                         title="Logo"
                       />

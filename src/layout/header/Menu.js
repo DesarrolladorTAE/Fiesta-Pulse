@@ -24,7 +24,7 @@ const MobileMenu = () => {
           <div className="mobile-logo">
             <Link href="/">
               <img
-                src="assets/images/logos/logo-one.png"
+                src="assets/images/logos/lol2.png"
                 alt="Logo"
                 title="Logo"
               />
@@ -50,18 +50,18 @@ const MobileMenu = () => {
 >
   <div>
     <ul className="navigation clearfix">
-      <li><Link href="/">Home</Link></li>
-      <li><Link href="/shop">Shop</Link></li>
+      <li><Link href="/">Inicio</Link></li>
+      <li><Link href="/shop">Tienda</Link></li>
       {/* <li><Link href="/product-details">Product Details</Link></li> */}
       {/* <li><Link href="/cart">Cart</Link></li> */}
       {/* <li><Link href="/checkout">Checkout</Link></li> */}
-      <li><Link href="/about">About us</Link></li>
-      <li><Link href="/contact">Contact us</Link></li>
+      <li><Link href="/about">Sobre Nosotros</Link></li>
+      <li><Link href="/contact">Contacto</Link></li>
       {/* <li><Link href="/404">404 error</Link></li> */}
     </ul>
 
     {/* Socials (móvil) */}
-    <div className="social-style-two mobile-socials">
+    {/* <div className="social-style-two mobile-socials">
       <a
         href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL"
         target="_blank" rel="noopener noreferrer" aria-label="Facebook"
@@ -80,7 +80,7 @@ const MobileMenu = () => {
       >
         <i className="fab fa-tiktok" />
       </a>
-    </div>
+    </div> */}
   </div>
 </Accordion.Collapse>
 
@@ -99,7 +99,7 @@ const DeskTopMenu = () => {
         <div className="mobile-logo">
           <Link href="/">
             <img
-              src="assets/images/logos/logo-one.png"
+              src="assets/images/logos/lol2.png"
               alt="Logo"
               title="Logo"
             />
@@ -120,15 +120,15 @@ const DeskTopMenu = () => {
       <div className="navbar-collapse collapse clearfix">
         <ul className="navigation clearfix">
           <li>
-            <Link href="/">Home</Link>
+            <Link href="/">Inicio</Link>
           </li>
 
-          <li><Link href="/shop">Shop</Link></li>
+          <li><Link href="/shop">Tienda</Link></li>
           {/* <li><Link href="/product-details">Product Details</Link></li> */}
           {/* <li><Link href="/cart">Cart</Link></li> */}
           {/* <li><Link href="/checkout">Checkout</Link></li> */}
-          <li><Link href="/about">About us</Link></li>
-          <li><Link href="/contact">Contact us</Link></li>
+          <li><Link href="/about">Sobre Nosotros</Link></li>
+          <li><Link href="/contact">Contacto</Link></li>
           {/* <li><Link href="/404">404 error</Link></li> */}
         </ul>
 

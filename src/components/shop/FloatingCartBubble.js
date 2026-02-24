@@ -96,7 +96,7 @@ export default function FloatingCartBubble({
               }}
             >
               <img
-                src={it.image || "/assets/images/logos/logo-one.png"}
+                src={it.image || "/assets/images/logos/lol2.png"}
                 alt={it.name}
                 style={{
                   width: 56,

@@ -65,7 +65,7 @@ function sanitizeImages(arr) {
       unique.push(u);
     }
   }
-  return unique.length ? unique : ["/assets/images/logos/logo-one.png"];
+  return unique.length ? unique : ["/assets/images/logos/lol2.png"];
 }
 
 /* ===== component ===== */

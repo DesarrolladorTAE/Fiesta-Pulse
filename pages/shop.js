@@ -360,7 +360,7 @@ export default function Shop() {
                       return (
                         <li key={String(p.id) + "-best-" + i}>
                           <div className="image">
-                            <img src={img || "/assets/images/logos/logo-one.png"} alt="Product" />
+                            <img src={img || "/assets/images/logos/lol2.png"} alt="Product" />
                           </div>
                           <div className="content">
                             <div className="ratting">
@@ -430,7 +430,7 @@ export default function Shop() {
                           {/* Imagen unificada */}
                           <div className="product-thumb">
                             <img
-                              src={img || "/assets/images/logos/logo-one.png"}
+                              src={img || "/assets/images/logos/lol2.png"}
                               alt={p.name}
                               loading="lazy"
                             />
@@ -511,7 +511,7 @@ export default function Shop() {
                       return (
                         <li key={String(p.id) + "-best-m-" + i}>
                           <div className="image">
-                            <img src={img || "/assets/images/logos/logo-one.png"} alt="Product" />
+                            <img src={img || "/assets/images/logos/lol2.png"} alt="Product" />
                           </div>
                           <div className="content">
                             <div className="ratting">
