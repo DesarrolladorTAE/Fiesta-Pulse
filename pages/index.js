@@ -19,7 +19,7 @@ const Index4 = () => {
               <div className="about-four-image rel z-1 mb-65">
                 <div className="about-circle">
                   <img
-                    src="assets/images/about/about-circle.png"
+                    src="assets/images/services/lav4.jpg"
                     alt="Lavandería"
                   />
                 </div>
