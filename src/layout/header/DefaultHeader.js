@@ -37,7 +37,7 @@ const DefaultHeader = () => {
             {/* Menu Button */}
 
             {/* Header Social */}
-            <div className="social-style-two">
+            {/* <div className="social-style-two">
               <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
                 <i className="fab fa-facebook-f" />
               </a>
@@ -48,7 +48,7 @@ const DefaultHeader = () => {
               <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
                 <i className="fab fa-tiktok" />
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

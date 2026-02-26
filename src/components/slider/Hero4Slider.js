@@ -15,6 +15,7 @@ export default class Hero4Slider extends Component {
   previous() {
     this.slider.slickPrev();
   }
+
   render() {
     return (
       <Fragment>
@@ -23,170 +24,123 @@ export default class Hero4Slider extends Component {
           ref={(c) => (this.slider = c)}
           className="slider-two-active"
         >
+          {/* ===== Slide 1 ===== */}
           <div className="slider-item-two">
             <div className="container">
               <div className="slide-content">
-                <span className="sub-title">Welcome to Fiesta Pulse</span>
-                <h2>Sound, Lights and Action</h2>
+                <span className="sub-title">Bienvenido a Lavandería Premium</span>
+                <h2>Ropa impecable, como nueva</h2>
                 <Link legacyBehavior href="/shop">
-                  <a className="theme-btn mt-15">
-                    Let’s Get Started <i className="fas fa-long-arrow-right" />
+                  <a
+                    className="theme-btn mt-15"
+                    style={{ color: "#fff" }}
+                  >
+                    Ver Ahora <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
-                            <div className="social-style-two">
-              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
-                <i className="fab fa-facebook-f" />
-              </a>
-
-              <a href="https://www.instagram.com/fiesta_pulse">
-                <i className="fab fa-instagram" />
-              </a>
-              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
-                <i className="fab fa-tiktok" />
-              </a>
-            </div>
               </div>
             </div>
             <div
               className="slider-image"
-              style={{
-                backgroundImage: "url(assets/images/services/luces.jpeg)",
-              }}
+              style={{ backgroundImage: "url(assets/images/services/lav3.avif)" }}
             />
           </div>
+
+          {/* ===== Slide 2 ===== */}
           <div className="slider-item-two">
             <div className="container">
               <div className="slide-content">
-                <span className="sub-title">Welcome to Fiesta Pulse</span>
-                <h2>Fuel the Night</h2>
+                <span className="sub-title">Lavado, secado y doblado</span>
+                <h2>Entrega rápida y con calidad</h2>
                 <Link legacyBehavior href="/shop">
-                  <a className="theme-btn mt-15">
-                    Let’s Get Started <i className="fas fa-long-arrow-right" />
+                  <a
+                    className="theme-btn mt-15"
+                    style={{ color: "#fff" }}
+                  >
+                    Ver ahora <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
-                            <div className="social-style-two">
-              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
-                <i className="fab fa-facebook-f" />
-              </a>
-
-              <a href="https://www.instagram.com/fiesta_pulse">
-                <i className="fab fa-instagram" />
-              </a>
-              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
-                <i className="fab fa-tiktok" />
-              </a>
-            </div>
-
               </div>
             </div>
             <div
               className="slider-image"
-              style={{
-                backgroundImage: "url(assets/images/services/lala.jpg)",
-              }}
+              style={{ backgroundImage: "url(assets/images/services/lav1.jpeg)" }}
             />
           </div>
+
+          {/* ===== Slide 3 ===== */}
           <div className="slider-item-two">
             <div className="container">
               <div className="slide-content">
-                <span className="sub-title">Welcome to Fiesta Pulse</span>
-                <h2>Light It. Sound It. Own It</h2>
+                <span className="sub-title">Cuidado especial para tus prendas</span>
+                <h2>Delicados, blancos y colores</h2>
                 <Link legacyBehavior href="/shop">
-                  <a className="theme-btn mt-15">
-                    Let’s Get Started <i className="fas fa-long-arrow-right" />
+                  <a
+                    className="theme-btn mt-15"
+                    style={{ color: "#fff" }}
+                  >
+                    Ver Ahora <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
-                            <div className="social-style-two">
-              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
-                <i className="fab fa-facebook-f" />
-              </a>
-
-              <a href="https://www.instagram.com/fiesta_pulse">
-                <i className="fab fa-instagram" />
-              </a>
-              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
-                <i className="fab fa-tiktok" />
-              </a>
-            </div>
-              </div>
-            </div>
-            <div
-            
-              className="slider-image"
-              style={{
-                backgroundImage: "url(assets/images/services/luces2.jpg)",
-              }}
-            />
-          </div>
-          <div className="slider-item-two">
-            <div className="container">
-              <div className="slide-content">
-                <span className="sub-title">Welcome to Fiesta Pulse</span>
-                <h2>Built for DJs. Ready for Events.</h2>
-                <Link legacyBehavior href="/shop">
-                  <a className="theme-btn mt-15">
-                    Let’s Get Started <i className="fas fa-long-arrow-right" />
-                  </a>
-                </Link>
-                            <div className="social-style-two">
-              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
-                <i className="fab fa-facebook-f" />
-              </a>
-
-              <a href="https://www.instagram.com/fiesta_pulse">
-                <i className="fab fa-instagram" />
-              </a>
-              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
-                <i className="fab fa-tiktok" />
-              </a>
-            </div>
               </div>
             </div>
             <div
               className="slider-image"
-              style={{
-                backgroundImage: "url(assets/images/services/luces3.jpg)",
-              }}
+              style={{ backgroundImage: "url(assets/images/services/lav9.webp)" }}
             />
           </div>
+
+          {/* ===== Slide 4 ===== */}
           <div className="slider-item-two">
             <div className="container">
               <div className="slide-content">
-                <span className="sub-title">Welcome to Fiesta Pulse</span>
-                <h2>Your Event, Amplified</h2>
+                <span className="sub-title">Planchado y presentación</span>
+                <h2>Listo para usar, sin arrugas</h2>
+                <Link legacyBehavior href="/shop">
+                  <a
+                    className="theme-btn mt-15"
+                    style={{ color: "#fff" }}
+                  >
+                    Ver Ahora <i className="fas fa-long-arrow-right" />
+                  </a>
+                </Link>
+              </div>
+            </div>
+            <div
+              className="slider-image"
+              style={{ backgroundImage: "url(assets/images/services/lav6.avif)" }}
+            />
+          </div>
+
+          {/* ===== Slide 5 ===== */}
+          <div className="slider-item-two">
+            <div className="container">
+              <div className="slide-content">
+                <span className="sub-title">Servicio a domicilio</span>
+                <h2>Recogemos y entregamos por ti</h2>
                 <Link legacyBehavior href="/about">
-                  <a className="theme-btn mt-15">
-                    Let’s Get Started <i className="fas fa-long-arrow-right" />
+                  <a
+                    className="theme-btn mt-15"
+                    style={{ color: "#fff" }}
+                  >
+                    Ver Ahora <i className="fas fa-long-arrow-right" />
                   </a>
                 </Link>
-                            <div className="social-style-two">
-              <a href="https://www.facebook.com/profile.php?id=61580899012055&mibextid=ZbWKwL">
-                <i className="fab fa-facebook-f" />
-              </a>
-
-              <a href="https://www.instagram.com/fiesta_pulse">
-                <i className="fab fa-instagram" />
-              </a>
-              <a href="https://www.tiktok.com/@fiestapulse?_t=ZT-90BrmVBJPzi&_r=1">
-                <i className="fab fa-tiktok" />
-              </a>
-            </div>
               </div>
             </div>
             <div
               className="slider-image"
-              style={{
-                backgroundImage: "url(assets/images/services/luces4.jpg)",
-              }}
+              style={{ backgroundImage: "url(assets/images/services/lav2.jpg)" }}
             />
           </div>
         </Slider>
+
         <div className="slider-arrows">
           <div className="container rel">
-            <button className="prev-slider slick-arrow" onClick={this.previous}>
+            <button className="prev-slider slick-arrow" onClick={this.previous} title="Anterior">
               <i className="fal fa-angle-left" />
             </button>
-            <button className="next-slider slick-arrow" onClick={this.next}>
+            <button className="next-slider slick-arrow" onClick={this.next} title="Siguiente">
               <i className="fal fa-angle-right" />
             </button>
           </div>

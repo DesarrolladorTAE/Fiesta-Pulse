@@ -126,7 +126,7 @@ export default function ProductQuickViewModal({
       <DialogContent sx={{ p: 0, overflow: "hidden" }}>
         {!product ? (
           <Box sx={{ p: 3 }}>
-            <Typography color="text.secondary">Loading…</Typography>
+            <Typography color="text.secondary">Cargando…</Typography>
           </Box>
         ) : (
           <Box
@@ -155,7 +155,7 @@ export default function ProductQuickViewModal({
               <Box sx={{ position: "relative" }}>
                 {product?.new && (
                   <Chip
-                    label="NEW"
+                    label="NUEVO"
                     size="small"
                     sx={{
                       position: "absolute",
@@ -355,7 +355,7 @@ export default function ProductQuickViewModal({
                 {(product?.shortDescription || product?.description) && (
                   <Box>
                     <Typography fontWeight={700} mb={0.5}>
-                      Description
+                      Descripción
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {descShort}
@@ -366,7 +366,7 @@ export default function ProductQuickViewModal({
                 {(product?.fullDescription || product?.longDescription) && (
                   <Box>
                     <Typography fontWeight={700} mb={0.5}>
-                      More details
+                      Mas Detalles
                     </Typography>
                     <Typography
                       variant="body2"
@@ -378,11 +378,7 @@ export default function ProductQuickViewModal({
                   </Box>
                 )}
 
-                {Number.isFinite(Number(product?.stock)) && (
-                  <Typography variant="body2" color="text.secondary">
-                    Stock: <b>{product.stock}</b>
-                  </Typography>
-                )}
+
               </Stack>
 
               {/* Footer sticky */}
@@ -401,7 +397,7 @@ export default function ProductQuickViewModal({
                 <Stack spacing={1.25}>
                   <Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
                     <Typography variant="body2" sx={{ minWidth: 70 }}>
-                      Quantity
+                      Unidades
                     </Typography>
 
                     <IconButton
@@ -438,26 +434,9 @@ export default function ProductQuickViewModal({
                       onClick={() => onAddToCart(product, qty)}
                       sx={{ height: 44, borderRadius: 2, fontWeight: 700, bgcolor: "grey.100" }}
                     >
-                      Add to cart
+                      + Agregar al Carrito
                     </Button>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<PaymentIcon />}
-                      onClick={() => onPayNow(product, qty)}
-                      sx={{
-                        height: 44,
-                        borderRadius: 2,
-                        fontWeight: 800,
-                        backgroundColor: "#f34520",
-                        color: "#fff", // color del texto
-                        "&:hover": {
-                          backgroundColor: "#d43c1c", // un poco más oscuro para hover
-                        },
-                      }}
-                    >
-                      Pay now
-                    </Button>
+
 
                   </Stack>
                 </Stack>

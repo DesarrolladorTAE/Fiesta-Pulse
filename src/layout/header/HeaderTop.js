@@ -6,9 +6,10 @@ const HeaderTop = () => {
       <div className="container-fluid">
         <div className="header-top">
           <div className="text">
-            <span className="hello">Hello</span> We’re professional entertainment event company. Let’s work together{" "}
+            <span className="hello">¡Hola!</span>{" "}
+            Somos una lavandería profesional. Deja tu ropa en manos expertas.{" "}
             <Link legacyBehavior href="/contact">
-              <a>Contact Us</a>
+              <a>Contáctanos</a>
             </Link>
           </div>
         </div>
@@ -16,4 +17,5 @@ const HeaderTop = () => {
     </div>
   );
 };
+
 export default HeaderTop;
