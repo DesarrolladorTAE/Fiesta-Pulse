@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useToast, useConfirm } from "@/components/alerts/AlertProvider";
 
 const API_URL = "https://telorecargo.com/api/enviar-documentos-whatsapp";
-const DESTINATION_WHATSAPP = "7444640535";
+const DESTINATION_WHATSAPP = "7445002399";
 
 const normalizePhone = (raw) => {
   if (!raw) return "";
@@ -127,7 +127,7 @@ const Contact = () => {
                 </div>
                 <h4>Teléfono</h4>
                 <span>
-                  <a href="tel:7444640535">744 464 0535</a>
+                  <a href="tel:7445002399">744 500 2399</a>
                 </span>
               </div>
             </div>
@@ -138,9 +138,9 @@ const Contact = () => {
                   <i className="fal fa-clock" />
                 </div>
                 <h4>Horario</h4>
-                <span>Lunes – Sábado</span>
+                <span>Lunes – Domingo</span>
                 <br />
-                <span>9:00 am – 7:00 pm</span>
+                <span>10:00 am – 6:00 pm</span>
                 <br />
                 <span>Domingo: Cerrado</span>
               </div>

@@ -31,7 +31,7 @@ const Footer = () => {
               <div className="content">
                 <span style={{ color: "#fff" }}>Teléfono</span>
                 <br />
-                <a href="tel:7444640535" style={{ color: "#fff" }}>744 464 0535</a>
+                <a href="tel:7445002399" style={{ color: "#fff" }}>744 500 2399</a>
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 
-const WHATSAPP_NUMBER = "7444640535";
+const WHATSAPP_NUMBER = "7445002399";
 
 function money(n) {
   return `$${Number(n || 0).toFixed(2)}`;
